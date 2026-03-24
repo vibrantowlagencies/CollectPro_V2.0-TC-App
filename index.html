@@ -1,311 +1,393 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="TC App">
-<meta name="theme-color" content="#f97316">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>CollectPro — Telecaller</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="theme-color" content="#ea580c"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<title>CollectPro · TC</title>
 
-<!--
-  ╔══════════════════════════════════════════════════════════════╗
-  ║  CollectPro TC App — v2.1.0                                  ║
-  ║  Product : CollectPro by Vibrant Owl Agencies (VOA)          ║
-  ║  Phase   : 2 — Auth + Pending Hot List + Shared Responsibility║
-  ║                                                              ║
-  ║  NEW in v2.1.0:                                              ║
-  ║  • Pending Hot List — aging/overdue accounts on dashboard    ║
-  ║  • Shared Responsibility — TC ↔ Exec coordination cards     ║
-  ║  • Call Exec / WA Exec direct from pending card              ║
-  ║  • Pre-filled WA message for responsibility handoff          ║
-  ║                                                              ║
-  ║  NEXT.JS MIGRATION GUIDE                                     ║
-  ║  New files to add:                                           ║
-  ║  components/dashboard/PendingHotList.jsx                     ║
-  ║  components/dashboard/PendingCard.jsx                        ║
-  ║  components/dashboard/SharedResponsibility.jsx               ║
-  ║  hooks/usePendingAccounts.js                                 ║
-  ╚══════════════════════════════════════════════════════════════╝
--->
-
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- React + Babel -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
-/* ── DESIGN TOKENS ─────────────────────────────────── */
-:root{
-  --bg:#f8f9fb; --bg2:#ffffff; --bg3:#f1f4f8;
-  --accent:#f97316; --accent-lt:#fff4ed; --accent-dk:#ea6c0a;
-  --blue:#3b82f6; --blue-lt:#eff6ff;
-  --green:#16a34a; --green-lt:#f0fdf4;
-  --red:#dc2626; --red-lt:#fef2f2;
-  --amber:#d97706; --amber-lt:#fffbeb;
-  --purple:#7c3aed; --purple-lt:#f5f3ff;
-  --cyan:#0891b2; --cyan-lt:#ecfeff;
-  --border:#e4e8ef; --border2:#d0d7e3;
-  --text:#0f172a; --text2:#475569; --text3:#94a3b8;
-  --shadow-sm:0 1px 3px rgba(0,0,0,.06);
-  --shadow:0 4px 16px rgba(0,0,0,.08);
-  --shadow-lg:0 8px 32px rgba(0,0,0,.12);
-  --r:14px;
-  --fh:'Sora',sans-serif;
-  --fm:'JetBrains Mono',monospace;
-  --fb:'Plus Jakarta Sans',sans-serif;
-}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body,#root{height:100%;width:100%;overflow:hidden}
-body{background:var(--bg);color:var(--text);font-family:var(--fb);-webkit-font-smoothing:antialiased}
+/* ── FONTS ── */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
-/* ── ANIMATIONS ─────────────────────────────────────── */
-@keyframes fadeUp  {from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-@keyframes fadeIn  {from{opacity:0}to{opacity:1}}
-@keyframes shake   {0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
-@keyframes spin    {to{transform:rotate(360deg)}}
-@keyframes dotPop  {0%{transform:scale(.8);opacity:.4}50%{transform:scale(1.2);opacity:1}100%{transform:scale(1);opacity:1}}
-@keyframes slideIn {from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-@keyframes pulse   {0%,100%{opacity:1}50%{opacity:.5}}
-@keyframes hotPulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.3)}50%{box-shadow:0 0 0 6px rgba(220,38,38,0)}}
-
-/* ── LOGIN ──────────────────────────────────────────── */
-.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#fff4ed,#f8f9fb,#fff);padding:24px}
-.login-card{background:#fff;border:1px solid var(--border);border-radius:24px;padding:44px 36px;width:100%;max-width:390px;box-shadow:var(--shadow-lg);animation:fadeUp .4s ease}
-.login-card.shake{animation:shake .4s ease}
-.login-logo-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:36px}
-.login-logo{width:72px;height:72px;background:linear-gradient(135deg,var(--accent),var(--accent-dk));border-radius:20px;display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:800;font-size:22px;color:#fff;box-shadow:0 8px 28px rgba(249,115,22,.28);letter-spacing:.5px}
-.login-title{font-family:var(--fh);font-size:24px;font-weight:700;color:var(--text)}
-.login-sub  {font-size:13px;color:var(--text3);text-align:center;line-height:1.5}
-.form-group {margin-bottom:18px}
-.form-label {font-size:11px;font-family:var(--fm);letter-spacing:1px;color:var(--text3);margin-bottom:8px;display:block;text-transform:uppercase}
-.form-input {width:100%;background:var(--bg3);border:1.5px solid var(--border);border-radius:12px;padding:13px 15px;color:var(--text);font-family:var(--fb);font-size:15px;outline:none;transition:all .2s;-webkit-appearance:none}
-.form-input:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(249,115,22,.1)}
-.form-input.pin-field{font-family:var(--fm);font-size:22px;text-align:center;letter-spacing:.3em}
-.pin-dots{display:flex;gap:10px;justify-content:center;margin:4px 0 20px}
-.pin-dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--border2);background:transparent;transition:all .15s ease}
-.pin-dot.filled{background:var(--accent);border-color:var(--accent);animation:dotPop .2s ease}
-.btn-login{width:100%;padding:15px;background:linear-gradient(135deg,var(--accent),var(--accent-dk));border:none;border-radius:14px;color:#fff;font-family:var(--fh);font-size:17px;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(249,115,22,.3);transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
-.btn-login:active{transform:scale(.98)}
-.btn-login:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}
-.login-error{background:var(--red-lt);border:1px solid rgba(220,38,38,.2);border-radius:10px;padding:11px 14px;font-size:13px;color:var(--red);margin-top:12px;animation:fadeIn .2s ease;text-align:center}
-
-/* ── APP SHELL ──────────────────────────────────────── */
-.app{display:flex;flex-direction:column;height:100vh}
-.header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-sm);flex-shrink:0}
-.brand{display:flex;align-items:center;gap:10px}
-.brand-logo{width:34px;height:34px;background:linear-gradient(135deg,var(--accent),var(--accent-dk));border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:800;font-size:11px;color:#fff;letter-spacing:.5px}
-.brand-name{font-family:var(--fh);font-size:16px;font-weight:700;color:var(--text)}
-.brand-role{font-family:var(--fm);font-size:10px;color:var(--accent);background:var(--accent-lt);padding:3px 9px;border-radius:20px;border:1px solid rgba(249,115,22,.2);letter-spacing:.5px}
-.hdr-right{display:flex;align-items:center;gap:8px}
-.staff-badge{font-family:var(--fm);font-size:11px;color:var(--text2);background:var(--bg3);padding:5px 10px;border-radius:8px;border:1px solid var(--border)}
-.city-badge{font-family:var(--fm);font-size:10px;font-weight:700;color:var(--accent);background:var(--accent-lt);padding:4px 9px;border-radius:20px;border:1px solid rgba(249,115,22,.2);letter-spacing:.5px}
-.logout-btn{background:none;border:1px solid var(--border);border-radius:8px;color:var(--text3);cursor:pointer;padding:5px 10px;font-size:12px;font-family:var(--fb);transition:all .15s}
-.logout-btn:hover{border-color:var(--red);color:var(--red)}
-
-/* ── BOTTOM NAV ─────────────────────────────────────── */
-.bnav{display:flex;background:var(--bg2);border-top:1px solid var(--border);height:60px;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom)}
-.ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;cursor:pointer;color:var(--text3);font-size:10px;font-family:var(--fb);font-weight:600;transition:color .2s;padding:0;position:relative}
-.ni .ico{font-size:20px}
-.ni.on{color:var(--accent)}
-.nav-badge{position:absolute;top:6px;right:calc(50% - 18px);background:var(--red);color:#fff;font-size:9px;font-weight:800;font-family:var(--fm);min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid var(--bg2)}
-
-/* ── PAGES ──────────────────────────────────────────── */
-.main-content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative}
-.page{display:none;padding-bottom:80px}
-.page.on{display:block;animation:fadeIn .2s ease}
-
-/* ── DASHBOARD ──────────────────────────────────────── */
-.dash-wrap{padding:16px}
-.dash-greeting{font-family:var(--fh);font-size:20px;font-weight:700;margin-bottom:2px}
-.dash-date{font-size:12px;color:var(--text3);font-family:var(--fm);margin-bottom:16px}
-.dash-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px}
-.dash-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--shadow-sm)}
-.dash-card-icon{font-size:20px;margin-bottom:8px}
-.dash-card-val{font-family:var(--fh);font-size:30px;font-weight:800;line-height:1}
-.dash-card.orange .dash-card-val{color:var(--accent)}
-.dash-card.green  .dash-card-val{color:var(--green)}
-.dash-card.blue   .dash-card-val{color:var(--blue)}
-.dash-card.red    .dash-card-val{color:var(--red)}
-.dash-card-lbl{font-size:11px;color:var(--text3);margin-top:4px;font-weight:500}
-
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   PENDING HOT LIST — components/dashboard/PendingHotList.jsx
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-.hot-list-section{margin:0 0 20px}
-.hot-list-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.hot-list-title{font-family:var(--fh);font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
-.hot-badge{background:var(--red);color:#fff;font-size:10px;font-weight:800;font-family:var(--fm);padding:2px 8px;border-radius:20px;letter-spacing:.3px}
-.hot-list-sub{font-size:11px;color:var(--text3);font-family:var(--fm)}
-.hot-empty{background:var(--green-lt);border:1px solid #86efac;border-radius:var(--r);padding:16px;text-align:center}
-.hot-empty-icon{font-size:24px;margin-bottom:6px}
-.hot-empty-text{font-size:13px;font-weight:600;color:var(--green)}
-.hot-empty-sub{font-size:11px;color:var(--green);opacity:.8;margin-top:3px}
-
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   PENDING CARD — components/dashboard/PendingCard.jsx
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-.pending-card{
-  background:var(--bg2);
-  border:1.5px solid var(--border);
-  border-radius:var(--r);
-  padding:14px;
-  margin-bottom:10px;
-  box-shadow:var(--shadow-sm);
-  animation:slideIn .3s ease;
-  position:relative;
-  overflow:hidden;
-}
-.pending-card::before{
-  content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
-  border-radius:4px 0 0 4px;
-}
-.pending-card.overdue::before{background:var(--red)}
-.pending-card.aging::before{background:var(--amber)}
-.pending-card.appt::before{background:var(--green)}
-
-/* Urgency strip */
-.urgency-strip{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:10px;
-}
-.urgency-badge{
-  font-size:10px;font-family:var(--fm);font-weight:700;
-  padding:3px 9px;border-radius:20px;letter-spacing:.3px;
-}
-.urgency-badge.overdue{background:var(--red-lt);color:var(--red);border:1px solid #fecaca}
-.urgency-badge.aging  {background:var(--amber-lt);color:var(--amber);border:1px solid #fde68a}
-.urgency-badge.appt   {background:var(--green-lt);color:var(--green);border:1px solid #86efac}
-.priority-score{
-  font-family:var(--fm);font-size:10px;font-weight:700;
-  color:var(--text3);
-}
-.priority-score span{color:var(--accent)}
-
-/* Card body */
-.pc-accno{font-family:var(--fh);font-size:14px;font-weight:800;color:var(--accent);margin-bottom:2px}
-.pc-name {font-size:15px;font-weight:700;color:var(--text);margin-bottom:2px}
-.pc-phone{font-family:var(--fm);font-size:13px;color:var(--green);font-weight:600;margin-bottom:4px}
-.pc-addr {font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:6px}
-.pc-meta {display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
-.pc-chip {
-  font-size:10px;font-family:var(--fm);padding:3px 8px;
-  border-radius:20px;border:1px solid var(--border);
-  background:var(--bg3);color:var(--text2);
-}
-.pc-chip.age{background:var(--amber-lt);color:var(--amber);border-color:#fde68a}
-.pc-chip.appt-chip{background:var(--green-lt);color:var(--green);border-color:#86efac}
-.pc-chip.status{background:var(--accent-lt);color:var(--accent);border-color:rgba(249,115,22,.3)}
-.pc-remark{
-  font-size:11px;color:var(--text3);font-style:italic;
-  background:var(--bg3);border-radius:8px;padding:6px 10px;
-  margin-bottom:10px;border-left:2px solid var(--border2);
+/* ── DESIGN TOKENS ── */
+:root {
+  --orange:    #ea580c;
+  --orange-dk: #c2410c;
+  --orange-lt: #fff7ed;
+  --orange-md: #fed7aa;
+  --green:     #16a34a;
+  --green-lt:  #f0fdf4;
+  --red:       #dc2626;
+  --red-lt:    #fef2f2;
+  --amber:     #d97706;
+  --amber-lt:  #fffbeb;
+  --blue:      #2563eb;
+  --blue-lt:   #eff6ff;
+  --purple:    #7c3aed;
+  --purple-lt: #f5f3ff;
+  --gray-50:   #f9fafb;
+  --gray-100:  #f3f4f6;
+  --gray-200:  #e5e7eb;
+  --gray-400:  #9ca3af;
+  --gray-500:  #6b7280;
+  --gray-700:  #374151;
+  --gray-900:  #111827;
+  --bg:        #ffffff;
+  --bg2:       #f9fafb;
+  --border:    #e5e7eb;
+  --text:      #111827;
+  --text2:     #374151;
+  --text3:     #6b7280;
+  --shadow:    0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.1);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,.12);
+  --r:         14px;
+  --r-sm:      10px;
+  --fh:        'DM Sans', sans-serif;
+  --fb:        'DM Sans', sans-serif;
+  --fm:        'DM Mono', monospace;
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   EXEC RESPONSIBILITY STRIP
-   components/dashboard/SharedResponsibility.jsx
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-.exec-strip{
-  background:linear-gradient(135deg,#eff6ff,#f0f9ff);
-  border:1px solid #bfdbfe;
-  border-radius:10px;
-  padding:10px 12px;
-  margin-bottom:10px;
+/* ── RESET ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg); overscroll-behavior: none; }
+body { font-family: var(--fb); color: var(--text); -webkit-font-smoothing: antialiased; }
+#root { height: 100%; display: flex; flex-direction: column; }
+
+/* ── APP SHELL ── */
+.app { display: flex; flex-direction: column; height: 100vh; max-width: 480px; margin: 0 auto; background: var(--bg); position: relative; overflow: hidden; }
+
+/* ── HEADER ── */
+.header { 
+  background: var(--orange); 
+  padding: 14px 16px 12px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+  position: relative;
 }
-.exec-strip-label{
-  font-size:10px;font-family:var(--fm);
-  color:var(--blue);text-transform:uppercase;
-  letter-spacing:.5px;margin-bottom:6px;
-  display:flex;align-items:center;gap:5px;
+.header::after {
+  content: '';
+  position: absolute; bottom: -1px; left: 0; right: 0; height: 1px;
+  background: rgba(255,255,255,.15);
 }
-.exec-strip-body{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.exec-info{display:flex;align-items:center;gap:8px}
-.exec-avatar{
-  width:30px;height:30px;border-radius:50%;
-  background:linear-gradient(135deg,var(--blue),#2563eb);
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--fh);font-weight:800;font-size:11px;color:#fff;
-  flex-shrink:0;
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-logo { 
+  width: 34px; height: 34px; background: rgba(255,255,255,.2); 
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  font-family: var(--fh); font-weight: 800; font-size: 13px; color: #fff; letter-spacing: -.5px;
 }
-.exec-name{font-size:13px;font-weight:700;color:var(--text)}
-.exec-id  {font-size:10px;font-family:var(--fm);color:var(--text3)}
-.exec-action-btns{display:flex;gap:6px}
-.exec-btn{
-  height:30px;padding:0 10px;border-radius:8px;
-  border:1.5px solid;font-size:11px;font-family:var(--fh);font-weight:700;
-  cursor:pointer;display:flex;align-items:center;gap:4px;
-  transition:all .15s;white-space:nowrap;
+.brand-name { font-family: var(--fh); font-size: 16px; font-weight: 700; color: #fff; letter-spacing: -.3px; }
+.brand-role { font-size: 10px; font-weight: 600; color: rgba(255,255,255,.7); letter-spacing: .5px; text-transform: uppercase; }
+.header-right { display: flex; align-items: center; gap: 8px; }
+.chip { 
+  background: rgba(255,255,255,.2); color: #fff; 
+  font-family: var(--fm); font-size: 11px; font-weight: 500;
+  padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(255,255,255,.3);
 }
-.exec-btn.call{background:var(--green-lt);color:var(--green);border-color:#86efac}
-.exec-btn.wa  {background:#f0fdf4;color:#15803d;border-color:#86efac}
-.exec-btn:active{transform:scale(.94)}
-
-/* Share responsibility button */
-.share-btn{
-  width:100%;padding:11px;
-  background:linear-gradient(135deg,#eff6ff,#dbeafe);
-  border:1.5px solid #93c5fd;border-radius:10px;
-  color:var(--blue);font-family:var(--fh);font-size:13px;font-weight:700;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;
-  transition:all .2s;
+.logout-btn {
+  background: none; border: none; cursor: pointer;
+  color: rgba(255,255,255,.8); font-size: 18px; padding: 4px;
+  transition: color .15s;
 }
-.share-btn:active{transform:scale(.98);background:#dbeafe}
-.share-btn:hover{border-color:var(--blue)}
+.logout-btn:hover { color: #fff; }
 
-/* Card action row (TC's own call/log buttons) */
-.pc-actions{display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
-.pc-btn{
-  flex:1;padding:9px 6px;border-radius:10px;
-  font-size:11px;font-family:var(--fh);font-weight:700;
-  border:1.5px solid;cursor:pointer;
-  transition:all .2s;display:flex;align-items:center;justify-content:center;gap:4px;
+/* ── PAGE CONTAINER ── */
+.page { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding-bottom: 80px; }
+.wrap { padding: 0 14px; }
+
+/* ── NAV BAR ── */
+.nav { 
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: var(--bg); border-top: 1px solid var(--border);
+  display: flex; align-items: stretch;
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 50;
 }
-.pc-btn.call{background:var(--green-lt);color:var(--green);border-color:#86efac}
-.pc-btn.wa  {background:var(--green-lt);color:#15803d;border-color:#86efac}
-.pc-btn.log {background:var(--accent-lt);color:var(--accent);border-color:rgba(249,115,22,.3)}
-.pc-btn:active{transform:scale(.96)}
+.nav-item { 
+  flex: 1; display: flex; flex-direction: column; align-items: center; 
+  justify-content: center; gap: 3px; padding: 10px 6px;
+  cursor: pointer; border: none; background: none;
+  font-family: var(--fh); transition: all .15s;
+}
+.nav-item .nav-icon { font-size: 20px; transition: transform .15s; }
+.nav-item .nav-label { font-size: 10px; font-weight: 600; color: var(--text3); letter-spacing: .3px; }
+.nav-item.active .nav-icon { transform: scale(1.1); }
+.nav-item.active .nav-label { color: var(--orange); }
+.nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--orange); margin-top: 2px; }
 
-/* No exec strip */
-.no-exec-strip{
-  background:var(--amber-lt);border:1px solid #fde68a;
-  border-radius:10px;padding:8px 12px;margin-bottom:10px;
-  font-size:11px;color:var(--amber);
-  display:flex;align-items:center;gap:6px;font-weight:600;
+/* ── LOGIN SCREEN ── */
+.login-screen {
+  height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: linear-gradient(160deg, #fff7ed 0%, #fff 50%, #fff7ed 100%);
+  padding: 32px 24px;
+}
+.login-logo {
+  width: 72px; height: 72px; background: var(--orange);
+  border-radius: 20px; display: flex; align-items: center; justify-content: center;
+  font-family: var(--fh); font-weight: 800; font-size: 22px; color: #fff;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 24px rgba(234,88,12,.35);
+}
+.login-title { font-family: var(--fh); font-size: 24px; font-weight: 700; color: var(--gray-900); margin-bottom: 4px; }
+.login-sub { font-size: 14px; color: var(--text3); margin-bottom: 32px; text-align: center; }
+.login-card { background: var(--bg); border-radius: var(--r); border: 1px solid var(--border); padding: 24px; width: 100%; max-width: 360px; box-shadow: var(--shadow-md); }
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; letter-spacing: .3px; text-transform: uppercase; }
+.field select, .field input {
+  width: 100%; padding: 12px 14px; border: 1.5px solid var(--border);
+  border-radius: var(--r-sm); font-family: var(--fb); font-size: 15px; color: var(--text);
+  background: var(--bg); outline: none; transition: border-color .2s;
+  -webkit-appearance: none; appearance: none;
+}
+.field select:focus, .field input:focus { border-color: var(--orange); }
+.pin-wrap { display: flex; gap: 10px; justify-content: center; margin-bottom: 24px; }
+.pin-dot { 
+  width: 48px; height: 48px; border-radius: 12px;
+  border: 2px solid var(--border); display: flex; align-items: center; justify-content: center;
+  font-size: 22px; transition: all .2s; background: var(--bg);
+}
+.pin-dot.filled { border-color: var(--orange); background: var(--orange-lt); }
+.pin-dot.filled::after { content: '●'; color: var(--orange); font-size: 14px; }
+.numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+.num-btn {
+  aspect-ratio: 1; border-radius: 12px; border: 1.5px solid var(--border);
+  background: var(--bg); font-family: var(--fh); font-size: 20px; font-weight: 600;
+  color: var(--text); cursor: pointer; transition: all .12s;
+  display: flex; align-items: center; justify-content: center;
+}
+.num-btn:active { background: var(--orange-lt); border-color: var(--orange); transform: scale(.95); }
+.num-btn.del { font-size: 18px; color: var(--text3); }
+.btn { 
+  width: 100%; padding: 14px; border-radius: var(--r-sm); border: none;
+  font-family: var(--fh); font-size: 15px; font-weight: 700; cursor: pointer;
+  transition: all .15s; letter-spacing: .2px;
+}
+.btn-primary { background: var(--orange); color: #fff; }
+.btn-primary:active { background: var(--orange-dk); transform: scale(.98); }
+.btn-primary:disabled { background: var(--gray-200); color: var(--text3); cursor: not-allowed; transform: none; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; top: 80px; left: 50%; transform: translateX(-50%) translateY(-10px);
+  background: var(--gray-900); color: #fff; font-family: var(--fh); font-size: 13px; font-weight: 500;
+  padding: 10px 18px; border-radius: 20px; z-index: 999; white-space: nowrap;
+  opacity: 0; transition: all .25s; pointer-events: none;
+  box-shadow: var(--shadow-lg);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.success { background: var(--green); }
+.toast.error   { background: var(--red); }
+
+/* ── HOME / DASHBOARD ── */
+.dash-header { 
+  background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dk) 100%);
+  padding: 20px 16px 24px; margin-bottom: -8px;
+}
+.dash-greeting { font-size: 13px; color: rgba(255,255,255,.75); font-weight: 500; margin-bottom: 2px; }
+.dash-name { font-family: var(--fh); font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 16px; }
+.dash-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stat-pill {
+  background: rgba(255,255,255,.15); border-radius: 12px; padding: 12px 8px;
+  text-align: center; border: 1px solid rgba(255,255,255,.2);
+}
+.stat-pill-val { font-family: var(--fm); font-size: 22px; font-weight: 500; color: #fff; line-height: 1; }
+.stat-pill-lbl { font-size: 10px; color: rgba(255,255,255,.7); font-weight: 600; letter-spacing: .4px; text-transform: uppercase; margin-top: 4px; }
+.dash-cards { padding: 20px 14px 0; display: flex; flex-direction: column; gap: 10px; }
+.dash-card {
+  background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--r);
+  padding: 16px; display: flex; align-items: center; gap: 14px;
+  cursor: pointer; transition: all .15s; box-shadow: var(--shadow);
+}
+.dash-card:active { background: var(--orange-lt); border-color: var(--orange); transform: scale(.99); }
+.dash-card-icon { font-size: 28px; flex-shrink: 0; }
+.dash-card-info { flex: 1; }
+.dash-card-title { font-family: var(--fh); font-size: 15px; font-weight: 700; color: var(--text); }
+.dash-card-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+.dash-card-count { font-family: var(--fm); font-size: 22px; font-weight: 500; color: var(--orange); }
+
+/* ── ACCOUNTS LIST ── */
+.list-header { 
+  padding: 14px 14px 10px; 
+  position: sticky; top: 0; background: var(--bg); z-index: 10;
+  border-bottom: 1px solid var(--border);
+}
+.list-header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.list-title { font-family: var(--fh); font-size: 16px; font-weight: 700; }
+.refresh-btn { 
+  background: var(--orange-lt); border: 1px solid var(--orange-md); color: var(--orange);
+  border-radius: 8px; padding: 5px 10px; font-family: var(--fh); font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all .15s;
+}
+.refresh-btn:active { background: var(--orange-md); }
+.filter-chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.filter-chips::-webkit-scrollbar { display: none; }
+.chip-btn {
+  flex-shrink: 0; padding: 6px 12px; border-radius: 20px; border: 1.5px solid var(--border);
+  background: var(--bg); font-family: var(--fh); font-size: 12px; font-weight: 600;
+  color: var(--text3); cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.chip-btn.active { background: var(--orange); border-color: var(--orange); color: #fff; }
+.chip-btn:active { transform: scale(.95); }
+
+/* ── ACCOUNT CARD ── */
+.account-card {
+  margin: 0 14px 10px; padding: 14px; border-radius: var(--r);
+  border: 1.5px solid var(--border); background: var(--bg);
+  cursor: pointer; transition: all .15s; box-shadow: var(--shadow);
+  animation: cardIn .2s ease;
+}
+.account-card:active { transform: scale(.99); box-shadow: none; }
+@keyframes cardIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.account-card.priority-1 { border-left: 4px solid var(--orange); }
+.account-card.priority-2 { border-left: 4px solid var(--amber); }
+.account-card.priority-3 { border-left: 4px solid var(--blue); }
+.account-card.priority-fresh { border-left: 4px solid var(--green); }
+.card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; }
+.card-name { font-family: var(--fh); font-size: 15px; font-weight: 700; color: var(--text); }
+.card-accno { font-family: var(--fm); font-size: 11px; color: var(--text3); margin-top: 1px; }
+.status-badge {
+  font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px;
+  letter-spacing: .3px; text-transform: uppercase; flex-shrink: 0; margin-left: 8px;
+}
+.s-fresh        { background: var(--green-lt);  color: var(--green);  border: 1px solid #86efac; }
+.s-called       { background: var(--blue-lt);   color: var(--blue);   border: 1px solid #bfdbfe; }
+.s-appt         { background: var(--orange-lt); color: var(--orange); border: 1px solid var(--orange-md); }
+.s-rescheduled  { background: var(--amber-lt);  color: var(--amber);  border: 1px solid #fde68a; }
+.s-nr           { background: var(--red-lt);    color: var(--red);    border: 1px solid #fecaca; }
+.s-issue        { background: var(--purple-lt); color: var(--purple); border: 1px solid #ddd6fe; }
+.s-strike       { background: #fef2f2;          color: #991b1b;       border: 1px solid #fecaca; }
+.card-info { display: flex; flex-direction: column; gap: 4px; }
+.card-row { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text2); }
+.card-row-icon { font-size: 13px; flex-shrink: 0; }
+.card-appt { 
+  background: var(--orange-lt); border: 1px solid var(--orange-md); border-radius: 8px;
+  padding: 6px 10px; display: flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; color: var(--orange); margin-top: 8px;
+}
+.card-actions { display: flex; gap: 8px; margin-top: 10px; }
+.card-btn {
+  flex: 1; padding: 9px; border-radius: 9px; border: none; cursor: pointer;
+  font-family: var(--fh); font-size: 13px; font-weight: 700; transition: all .15s;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+}
+.card-btn:active { transform: scale(.97); }
+.btn-call  { background: var(--green);  color: #fff; }
+.btn-wa    { background: #25d366;       color: #fff; }
+.btn-log   { background: var(--orange-lt); color: var(--orange); border: 1.5px solid var(--orange-md); }
+.strikes { display: flex; gap: 3px; margin-top: 6px; }
+.strike-dot { width: 8px; height: 8px; border-radius: 50%; }
+.strike-dot.active { background: var(--red); }
+.strike-dot.inactive { background: var(--gray-200); }
+
+/* ── LOG CALL BOTTOM SHEET ── */
+.overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 100;
+  display: flex; align-items: flex-end; justify-content: center;
+  animation: fadeIn .2s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.sheet {
+  background: var(--bg); border-radius: 20px 20px 0 0; width: 100%; max-width: 480px;
+  max-height: 90vh; overflow-y: auto; padding: 16px 16px 32px;
+  animation: slideUp .25s ease;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.sheet-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
+.sheet-title { font-family: var(--fh); font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+.sheet-sub { font-size: 13px; color: var(--text3); margin-bottom: 16px; }
+.sheet-customer {
+  background: var(--orange-lt); border: 1px solid var(--orange-md); border-radius: var(--r-sm);
+  padding: 12px 14px; margin-bottom: 16px;
+}
+.sheet-customer-name { font-family: var(--fh); font-size: 15px; font-weight: 700; }
+.sheet-customer-acc { font-family: var(--fm); font-size: 12px; color: var(--orange); }
+.section-label { font-size: 12px; font-weight: 700; color: var(--text2); letter-spacing: .5px; text-transform: uppercase; margin-bottom: 8px; }
+.outcome-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+.outcome-btn {
+  padding: 11px 8px; border-radius: var(--r-sm); border: 1.5px solid var(--border);
+  background: var(--bg); font-family: var(--fh); font-size: 12px; font-weight: 600;
+  color: var(--text); cursor: pointer; transition: all .15s; text-align: center;
+}
+.outcome-btn:active { transform: scale(.97); }
+.outcome-btn.selected { border-color: var(--orange); background: var(--orange); color: #fff; }
+.outcome-btn.selected-green { border-color: var(--green); background: var(--green); color: #fff; }
+.outcome-btn.selected-red { border-color: var(--red); background: var(--red); color: #fff; }
+.outcome-btn.selected-amber { border-color: var(--amber); background: var(--amber); color: #fff; }
+.outcome-btn.selected-purple { border-color: var(--purple); background: var(--purple); color: #fff; }
+.remark-input {
+  width: 100%; padding: 12px 14px; border: 1.5px solid var(--border);
+  border-radius: var(--r-sm); font-family: var(--fb); font-size: 14px; color: var(--text);
+  resize: none; outline: none; transition: border-color .2s; min-height: 80px;
+}
+.remark-input:focus { border-color: var(--orange); }
+.date-input {
+  width: 100%; padding: 12px 14px; border: 1.5px solid var(--border);
+  border-radius: var(--r-sm); font-family: var(--fb); font-size: 15px; color: var(--text);
+  outline: none; transition: border-color .2s; margin-bottom: 16px;
+  -webkit-appearance: none;
+}
+.date-input:focus { border-color: var(--orange); }
+.submit-btn {
+  width: 100%; padding: 15px; border-radius: var(--r-sm); border: none;
+  background: var(--orange); color: #fff; font-family: var(--fh); font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: all .15s; margin-top: 8px;
+}
+.submit-btn:disabled { background: var(--gray-200); color: var(--text3); cursor: not-allowed; }
+.submit-btn:not(:disabled):active { background: var(--orange-dk); transform: scale(.99); }
+.cancel-link {
+  display: block; text-align: center; margin-top: 12px; font-size: 14px;
+  color: var(--text3); cursor: pointer; font-weight: 500;
 }
 
-/* ── SPINNER ────────────────────────────────────────── */
-.spinner{width:20px;height:20px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
-.spinner-sm{width:16px;height:16px;border-width:2px;border-color:rgba(249,115,22,.2);border-top-color:var(--accent)}
+/* ── DAILY REPORT ── */
+.report-header { 
+  background: linear-gradient(135deg, #1e293b 0%, #374151 100%);
+  padding: 20px 16px; margin-bottom: 14px;
+}
+.report-date { font-size: 12px; color: rgba(255,255,255,.6); margin-bottom: 4px; }
+.report-title { font-family: var(--fh); font-size: 20px; font-weight: 700; color: #fff; }
+.report-stat-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 14px; }
+.report-stat { background: rgba(255,255,255,.1); border-radius: 10px; padding: 10px; text-align: center; }
+.report-stat-val { font-family: var(--fm); font-size: 20px; color: #fff; font-weight: 500; }
+.report-stat-lbl { font-size: 10px; color: rgba(255,255,255,.6); font-weight: 600; letter-spacing: .3px; margin-top: 2px; }
+.report-section { padding: 0 14px 14px; }
+.report-row {
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-sm);
+  padding: 12px 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px;
+}
+.report-row-time { font-family: var(--fm); font-size: 11px; color: var(--text3); flex-shrink: 0; }
+.report-row-info { flex: 1; }
+.report-row-name { font-size: 14px; font-weight: 600; }
+.report-row-outcome { font-size: 12px; color: var(--text3); margin-top: 1px; }
 
-/* ── TOAST ──────────────────────────────────────────── */
-.toast-wrap{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);z-index:400;animation:fadeUp .25s ease}
-.toast-inner{background:var(--text);color:#fff;border-radius:14px;padding:13px 22px;font-size:14px;font-weight:500;white-space:nowrap;box-shadow:var(--shadow-lg);font-family:var(--fb)}
-.toast-inner.success{background:var(--green)}
-.toast-inner.error  {background:var(--red)}
-.toast-inner.warning{background:var(--amber)}
+/* ── EMPTY STATE ── */
+.empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 24px; text-align: center; }
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-title { font-family: var(--fh); font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+.empty-sub { font-size: 14px; color: var(--text3); line-height: 1.5; }
 
-/* ── LOADING ────────────────────────────────────────── */
-.load-overlay{position:fixed;inset:0;background:rgba(248,249,251,.88);z-index:300;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px}
-.load-spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
-.load-text{font-family:var(--fm);font-size:13px;color:var(--text2)}
+/* ── SKELETON ── */
+.skeleton { background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 50%, var(--gray-100) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 8px; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+.skel-card { height: 100px; margin: 0 14px 10px; border-radius: var(--r); }
 
-/* ── SECTION SKELETON ───────────────────────────────── */
-.skeleton{background:linear-gradient(90deg,var(--bg3) 25%,var(--border) 50%,var(--bg3) 75%);background-size:200% 100%;animation:shimmer 1.2s infinite;border-radius:8px}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+/* ── OUTCOME GROUPS ── */
+.outcome-group { margin-bottom: 14px; }
+.outcome-group-title { font-size: 11px; font-weight: 700; color: var(--text3); letter-spacing: .5px; text-transform: uppercase; margin-bottom: 6px; padding: 0 2px; }
 
-/* ── COMING SOON ────────────────────────────────────── */
-.coming-soon{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center}
-.coming-soon-icon{width:64px;height:64px;background:var(--accent-lt);border:1px solid rgba(249,115,22,.2);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:16px}
-.coming-soon-title{font-family:var(--fh);font-size:17px;font-weight:700;margin-bottom:8px}
-.coming-soon-sub{font-size:13px;color:var(--text3);line-height:1.6;max-width:260px}
-
-/* scrollbar */
-::-webkit-scrollbar{width:3px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+/* ── DIVIDER ── */
+.divider { height: 1px; background: var(--border); margin: 12px 0; }
 </style>
 </head>
 <body>
@@ -314,778 +396,734 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);-webkit-font-s
 <script type="text/babel">
 const { useState, useEffect, useCallback, useRef, useMemo } = React;
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  📁 lib/constants.js
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ─────────────────────────────────────────────
+//  CONFIG
+// ─────────────────────────────────────────────
 const CONFIG = {
-  API_URL:      'https://script.google.com/macros/s/AKfycbyRb7oEMdppJKouU5xCAQVq-IauFaugqXslscYChoFaXkvWzIQzHCg9q5u3AZWAlxB_Pg/exec',
-  CLIENT_ID:    'VOA_CBE',
-  SESSION_KEY:  'voa_session_tc',
-  REFRESH_MS:   25 * 60 * 1000,
-  ALLOWED_ROLE: 'TELECALLER',
-  APP_VERSION:  'v2.1.0',
-  CITY_DEFAULT: 'CBE',
-  // Aging thresholds
-  AGING_HOURS:  48,   // Show in hot list after 48h idle
-  OVERDUE_FLAG: true, // Show overdue appointments
+  API_URL:   'https://script.google.com/macros/s/AKfycbyRb7oEMdppJKouU5xCAQVq-IauFaugqXslscYChoFaXkvWzIQzHCg9q5u3AZWAlxB_Pg/exec',
+  CLIENT_ID: 'VOA_CBE',
+  TOKEN_TTL: 29 * 60 * 1000, // 29 min — refresh before 30 min expiry
 };
 
-const NAV_ITEMS = [
-  { id:'dash',     icon:'🏠', label:'Home'     },
-  { id:'accounts', icon:'📋', label:'Accounts' },
-  { id:'earnings', icon:'💰', label:'Earnings' },
-  { id:'report',   icon:'📊', label:'Report'   },
+// ─────────────────────────────────────────────
+//  OUTCOME DEFINITIONS
+// ─────────────────────────────────────────────
+const OUTCOME_GROUPS = [
+  {
+    title: 'Connected',
+    color: 'green',
+    items: [
+      { label: '✅ Appt Fixed',        value: 'Appt Fixed',        needsDate: true  },
+      { label: '📞 Called / Spoke',    value: 'Called',            needsDate: false },
+    ]
+  },
+  {
+    title: 'Rescheduled',
+    color: 'amber',
+    items: [
+      { label: '📅 Rescheduled',       value: 'Rescheduled',       needsDate: false },
+      { label: '✈️ Out of Station',    value: 'Out of Station',    needsDate: false },
+      { label: '🔁 Call Back Request', value: 'Call Back Request', needsDate: false },
+    ]
+  },
+  {
+    title: 'Not Reachable',
+    color: 'red',
+    items: [
+      { label: '📴 Switch Off',        value: 'Switch Off',        needsDate: false },
+      { label: '📵 RNR / Busy',        value: 'RNR / Busy',       needsDate: false },
+      { label: '🚫 Incoming Barred',   value: 'Incoming Barred',   needsDate: false },
+    ]
+  },
+  {
+    title: 'Issues / Special',
+    color: 'purple',
+    items: [
+      { label: '💰 Refund Issue',      value: 'Refund Issue',      needsDate: false },
+      { label: '🔌 Reconnection',      value: 'Reconnection',      needsDate: false },
+      { label: '📧 Mail Confirmation', value: 'Mail Confirmation', needsDate: false },
+      { label: '📦 Junction Box',      value: 'Junction Box Issue',needsDate: false },
+      { label: '📍 Address Change',    value: 'Address Change',    needsDate: false },
+    ]
+  },
+  {
+    title: 'Non Recoverable',
+    color: 'red',
+    items: [
+      { label: '❌ Wrong Number',      value: 'Wrong Number',      needsDate: false },
+      { label: '🏠 Not Willing',       value: 'Not Willing',       needsDate: false },
+      { label: '📍 Address Not Found', value: 'Address Not Found', needsDate: false },
+      { label: '🔄 Already Collected', value: 'Already Collected', needsDate: false },
+    ]
+  },
 ];
 
-const STAT_CARDS = [
-  { id:'total',   cls:'orange', icon:'📋', label:'My Accounts'   },
-  { id:'appt',    cls:'green',  icon:'📅', label:'Appts Fixed'   },
-  { id:'called',  cls:'blue',   icon:'📞', label:'Calls Today'   },
-  { id:'pending', cls:'red',    icon:'⚡', label:'Still Pending' },
-];
+const ALL_OUTCOMES = OUTCOME_GROUPS.flatMap(g => g.items);
 
-// Status → human label map
-const STATUS_LABELS = {
-  FRESH:'Fresh', CALLED:'Called', APPT_FIXED:'Appt Fixed',
-  NOT_VISITED:'Not Visited', RESCHEDULED:'Rescheduled',
-  NOT_REACHABLE:'Not Reachable', STRIKE_1:'Strike 1',
-  STRIKE_2:'Strike 2', STRIKE_3:'Strike 3',
-  ISSUE_REFUND:'Refund Issue', ISSUE_RECONNECTION:'Reconnection',
-  ISSUE_MAIL:'Mail Confirm', ISSUE_JBOX:'JBox Issue', ISSUE_ADDR:'Addr Change'
+// ─────────────────────────────────────────────
+//  SESSION STORE
+// ─────────────────────────────────────────────
+const SS = {
+  get:   () => { try { return JSON.parse(sessionStorage.getItem('tcp_sess') || 'null'); } catch { return null; } },
+  set:   (v) => sessionStorage.setItem('tcp_sess', JSON.stringify(v)),
+  clear: () => sessionStorage.removeItem('tcp_sess'),
 };
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  📁 lib/api.js
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ─────────────────────────────────────────────
+//  API
+// ─────────────────────────────────────────────
 const Api = {
   async get(params) {
     const url = new URL(CONFIG.API_URL);
-    url.searchParams.append('client_id', CONFIG.CLIENT_ID);
-    Object.entries(params).forEach(([k,v]) => url.searchParams.append(k, String(v)));
-    const res  = await fetch(url.toString());
-    if (!res.ok) throw new Error('Network error: ' + res.status);
-    const json = await res.json();
-    if (!json.success) throw new Error(json.error || 'Request failed');
-    return json.data;
-  }
-};
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  📁 lib/session.js
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const SessionStore = {
-  save(data) { try { localStorage.setItem(CONFIG.SESSION_KEY, JSON.stringify(data)); } catch {} },
-  load() {
-    try {
-      const raw = localStorage.getItem(CONFIG.SESSION_KEY);
-      if (!raw) return null;
-      const s = JSON.parse(raw);
-      const parts = (s.token || '').split('|');
-      if (parts.length !== 5 || Date.now() > parseInt(parts[4])) { this.clear(); return null; }
-      return s;
-    } catch { return null; }
+    url.searchParams.set('client_id', CONFIG.CLIENT_ID);
+    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+    const r = await fetch(url.toString());
+    if (!r.ok) throw new Error('Network error');
+    const j = await r.json();
+    if (!j.success) throw new Error(j.error || 'API error');
+    return j.data;
   },
-  clear() { try { localStorage.removeItem(CONFIG.SESSION_KEY); } catch {} }
-};
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  📁 lib/utils.js
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const Utils = {
-  getGreeting() {
-    const h = new Date().getHours();
-    if (h < 12) return 'Good morning';
-    if (h < 17) return 'Good afternoon';
-    return 'Good evening';
-  },
-  getDateStr() {
-    return new Date().toLocaleDateString('en-IN', {
-      weekday:'long', day:'numeric', month:'long', year:'numeric'
+  async post(body) {
+    const r = await fetch(CONFIG.API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ client_id: CONFIG.CLIENT_ID, ...body })
     });
-  },
-  sanitizePin: (v) => String(v).replace(/\D/g,'').slice(0,4),
-  firstName:   (n) => (n||'').split(' ')[0],
-  initials:    (n) => (n||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(),
-  hoursAgo(isoStr) {
-    if (!isoStr) return 0;
-    return Math.round((Date.now() - new Date(isoStr).getTime()) / 3600000);
-  },
-  formatHours(h) {
-    if (h < 24) return h + 'h ago';
-    return Math.floor(h/24) + 'd ago';
-  },
-  buildWALink(mobile, msg) {
-    const m = String(mobile).replace(/\D/g,'');
-    const num = m.length === 10 ? '91' + m : m;
-    return `https://wa.me/${num}?text=${encodeURIComponent(msg)}`;
-  },
-  buildCallLink(mobile) {
-    return 'tel:' + String(mobile).replace(/\D/g,'');
-  },
-  todayStr() {
-    const d = new Date();
-    return d.getFullYear() + '-' +
-      String(d.getMonth()+1).padStart(2,'0') + '-' +
-      String(d.getDate()).padStart(2,'0');
+    if (!r.ok) throw new Error('Network error');
+    const j = await r.json();
+    if (!j.success) throw new Error(j.error || 'API error');
+    return j.data;
   }
 };
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  📁 hooks/usePendingAccounts.js
-//  Fetches TC accounts and builds hot list + stats
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function usePendingAccounts(session) {
-  const [accounts,  setAccounts]  = useState([]);
-  const [loading,   setLoading]   = useState(true);
-  const [error,     setError]     = useState(null);
-  const [lastFetch, setLastFetch] = useState(null);
+// ─────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────
+const getStatusBadgeClass = (status) => {
+  if (status === 'FRESH')           return 's-fresh';
+  if (status === 'CALLED')          return 's-called';
+  if (status === 'APPT_FIXED')      return 's-appt';
+  if (status === 'RESCHEDULED')     return 's-rescheduled';
+  if (status === 'NOT_REACHABLE')   return 's-nr';
+  if (status === 'NOT_VISITED')     return 's-nr';
+  if (status.startsWith('ISSUE_'))  return 's-issue';
+  if (status.startsWith('STRIKE_')) return 's-strike';
+  if (status.startsWith('NR_'))     return 's-nr';
+  return 's-fresh';
+};
 
-  const fetch = useCallback(async () => {
-    if (!session) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await Api.get({
-        action:  'get_tc_accounts',
-        city:    session.city,
-        staffId: session.staffId,
-        token:   session.token
-      });
-      setAccounts(Array.isArray(data) ? data : []);
-      setLastFetch(Date.now());
-    } catch (e) {
-      setError(e.message);
-      setAccounts([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [session]);
+const getStatusLabel = (status) => {
+  const map = {
+    FRESH: 'Fresh', CALLED: 'Called', APPT_FIXED: 'Appt Fixed',
+    RESCHEDULED: 'Rescheduled', NOT_REACHABLE: 'Not Reachable',
+    NOT_VISITED: 'Not Visited', STRIKE_1: 'Strike 1', STRIKE_2: 'Strike 2',
+    STRIKE_3: 'Strike 3', ISSUE_REFUND: 'Refund', ISSUE_RECONNECTION: 'Reconnection',
+    ISSUE_MAIL: 'Mail', ISSUE_JBOX: 'Junction Box', ISSUE_ADDR: 'Addr Change',
+    NR_WRONG_NO: 'Wrong No', NR_OWN: 'Not Willing', NR_ADDR: 'Addr Not Found',
+    COLLECTED: 'Collected',
+  };
+  return map[status] || status;
+};
 
-  useEffect(() => { fetch(); }, [fetch]);
+const getCardPriorityClass = (p) => {
+  if (p <= 1) return 'priority-1';
+  if (p <= 2) return 'priority-2';
+  if (p <= 3) return 'priority-3';
+  return 'priority-fresh';
+};
 
-  // Derived stats
-  const stats = useMemo(() => {
-    const today = Utils.todayStr();
-    return {
-      total:   accounts.length,
-      appt:    accounts.filter(a => a.status === 'APPT_FIXED').length,
-      called:  accounts.filter(a => {
-        const ts = a.lastActionTime || a.last_action_time || '';
-        return ts.startsWith(today);
-      }).length,
-      pending: accounts.filter(a => !['COLLECTED','NR_OWN','NR_WRONG_NO','NR_ADDR','STRIKE_3'].includes(a.status)).length
-    };
-  }, [accounts]);
+const todayStr = () => new Date().toISOString().split('T')[0];
+const tomorrowStr = () => { const d = new Date(); d.setDate(d.getDate()+1); return d.toISOString().split('T')[0]; };
 
-  // Hot list: aging (>48h) + overdue appointments — sorted by priority score desc
-  const hotList = useMemo(() => {
-    const today = Utils.todayStr();
-    return accounts
-      .filter(a => {
-        const terminal = ['COLLECTED','NR_OWN','NR_WRONG_NO','NR_ADDR','STRIKE_3'];
-        if (terminal.includes(a.status)) return false;
-        if (['COOLING','COOLING_POOL'].includes(a.status)) return false;
-        const ageHours = Utils.hoursAgo(a.pendingSince || a.pending_since);
-        const isAging  = ageHours >= CONFIG.AGING_HOURS;
-        const isOverdue= a.apptDate && a.apptDate < today && a.status === 'APPT_FIXED';
-        return isAging || isOverdue;
-      })
-      .map(a => {
-        const today = Utils.todayStr();
-        const ageH  = Utils.hoursAgo(a.pendingSince || a.pending_since);
-        const isOverdue = a.apptDate && a.apptDate < today && a.status === 'APPT_FIXED';
-        const isApptToday = a.apptDate === today;
-        return {
-          ...a,
-          _ageHours: ageH,
-          _urgency:  isOverdue ? 'overdue' : isApptToday ? 'appt' : 'aging'
-        };
-      })
-      .sort((a, b) => (b.priorityScore || b.priority_score || 0) - (a.priorityScore || a.priority_score || 0))
-      .slice(0, 10); // Cap at 10 on dashboard
-  }, [accounts]);
+// ─────────────────────────────────────────────
+//  TOAST
+// ─────────────────────────────────────────────
+const Toast = ({ msg, type }) => (
+  <div className={`toast ${msg ? 'show' : ''} ${type || ''}`}>{msg}</div>
+);
 
-  return { accounts, hotList, stats, loading, error, refresh: fetch, lastFetch };
-}
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  📁 hooks/useAuth.js
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function useAuth({ onSuccess, onError }) {
-  const [loading, setLoading] = useState(false);
-  const login = useCallback(async (staffId, pin) => {
-    setLoading(true);
-    try {
-      const data = await Api.get({
-        action: 'login', city: CONFIG.CITY_DEFAULT,
-        staffId: String(staffId).trim().toUpperCase(), pin: pin.trim()
-      });
-      if (data.role !== CONFIG.ALLOWED_ROLE) throw new Error('This app is for Telecallers only');
-      const session = {
-        token: data.token, staffId: data.staffId, staffName: data.staffName,
-        role: data.role, city: data.city, clientId: data.clientId, loginAt: Date.now()
-      };
-      SessionStore.save(session);
-      onSuccess(session);
-    } catch (e) {
-      const msg = e.message.includes('Invalid') ? 'Invalid Staff ID or PIN'
-                : e.message.includes('attempts') ? 'Too many attempts. Wait 10 min.'
-                : e.message || 'Login failed';
-      onError(msg);
-    } finally { setLoading(false); }
-  }, [onSuccess, onError]);
-  return { login, loading };
-}
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  📁 hooks/useToast.js
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function useToast() {
-  const [toast, setToast] = useState(null);
-  const show = useCallback((msg, type='error') => setToast({ msg, type }), []);
-  const hide = useCallback(() => setToast(null), []);
-  return { toast, showToast: show, hideToast: hide };
+  const [toast, setToast] = useState({ msg: '', type: '' });
+  const show = useCallback((msg, type = '') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast({ msg: '', type: '' }), 2800);
+  }, []);
+  return [toast, show];
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  📁 hooks/useTokenRefresh.js
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function useTokenRefresh(session, onExpired) {
-  const timerRef = useRef(null);
-  useEffect(() => {
-    if (!session) return;
-    timerRef.current = setInterval(async () => {
-      try {
-        const data = await Api.get({ action:'login', city:session.city, staffId:session.staffId, token:session.token });
-        SessionStore.save({ ...session, token: data.token, loginAt: Date.now() });
-      } catch { onExpired(); }
-    }, CONFIG.REFRESH_MS);
-    return () => clearInterval(timerRef.current);
-  }, [session]);
-}
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  📁 components/ui/Toast.jsx
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const Toast = ({ msg, type='error', onDone }) => {
-  useEffect(() => { const t = setTimeout(onDone, 3200); return () => clearTimeout(t); }, []);
-  return <div className="toast-wrap"><div className={`toast-inner ${type}`}>{msg}</div></div>;
-};
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  📁 components/ui/PinDots.jsx
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const PinDots = ({ length=0, total=4 }) => (
-  <div className="pin-dots">
-    {Array.from({ length:total }).map((_,i) => (
-      <div key={i} className={`pin-dot${length > i ? ' filled' : ''}`} />
-    ))}
-  </div>
-);
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  📁 components/ui/BrandLogo.jsx
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const BrandLogo = ({ size='lg' }) => {
-  const lg = size === 'lg';
-  return (
-    <div style={{
-      width: lg?72:34, height: lg?72:34,
-      background:'linear-gradient(135deg,var(--accent),var(--accent-dk))',
-      borderRadius: lg?20:10,
-      display:'flex', alignItems:'center', justifyContent:'center',
-      fontFamily:'var(--fh)', fontWeight:800, fontSize: lg?22:11,
-      color:'#fff', letterSpacing:'.5px', flexShrink:0,
-      boxShadow: lg?'0 8px 28px rgba(249,115,22,.28)':'none'
-    }}>VOA</div>
-  );
-};
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  📁 components/layout/AppHeader.jsx
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const AppHeader = ({ session, onLogout }) => (
-  <div className="header">
-    <div className="brand">
-      <BrandLogo size="sm" />
-      <span className="brand-name">CollectPro</span>
-      <span className="brand-role">TELECALLER</span>
-    </div>
-    <div className="hdr-right">
-      <span className="city-badge">{session.city}</span>
-      <span className="staff-badge">{Utils.firstName(session.staffName)}</span>
-      <button className="logout-btn" onClick={onLogout}>✕</button>
-    </div>
-  </div>
-);
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  📁 components/layout/BottomNav.jsx
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const BottomNav = ({ active, onChange, hotCount=0 }) => (
-  <div className="bnav">
-    {NAV_ITEMS.map(n => (
-      <button key={n.id} className={`ni${active===n.id?' on':''}`} onClick={() => onChange(n.id)}>
-        <span className="ico">{n.icon}</span>
-        {n.label}
-        {n.id==='dash' && hotCount > 0 && (
-          <span className="nav-badge">{hotCount > 9 ? '9+' : hotCount}</span>
-        )}
-      </button>
-    ))}
-  </div>
-);
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  📁 components/dashboard/SharedResponsibility.jsx
-//  Shows assigned exec + call/WA exec + share WA message
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const SharedResponsibility = ({ account, tcName, showToast }) => {
-  const execId   = account.execId   || account.exec_id   || '';
-  const execName = account.execName || account.exec_name || '';
-
-  // Build pre-filled WhatsApp message for sharing responsibility
-  const buildShareMessage = () => {
-    const accNo  = account.accountNo  || account.account_no  || '';
-    const name   = account.name       || '';
-    const mobile = account.mobile     || '';
-    const area   = account.area       || '';
-    const appt   = account.apptDate   || account.appt_date   || '';
-    const remark = account.tcRemark   || account.tc_remark   || '';
-    const ageH   = account._ageHours  || 0;
-
-    return `🔔 *CollectPro — Pending Alert*\n\n` +
-      `Hi ${execName || 'Exec'}, please follow up on this account:\n\n` +
-      `📋 *Account:* ${accNo}\n` +
-      `👤 *Customer:* ${name}\n` +
-      `📞 *Mobile:* ${mobile}\n` +
-      `📍 *Area:* ${area}\n` +
-      (appt ? `📅 *Appointment:* ${appt}\n` : '') +
-      (remark ? `💬 *Remark:* ${remark}\n` : '') +
-      `⏱ *Pending since:* ${Utils.formatHours(ageH)}\n\n` +
-      `Please confirm visit or call me. — ${tcName} (TC)`;
-  };
-
-  const handleShareWA = () => {
-    // Need exec's mobile — use execId as fallback label if no mobile
-    // In Phase 5, exec mobile will be fetched from staff list
-    const msg  = buildShareMessage();
-    // For now open WA without pre-filled number (exec mobile not in account data)
-    // Phase 5: fetch exec mobile from getStaffList and pre-fill number
-    const link = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-    window.open(link, '_blank');
-    showToast('Opening WhatsApp to share with exec', 'success');
-  };
-
-  if (!execId) {
-    return (
-      <div className="no-exec-strip">
-        ⚠️ No executive assigned yet — contact Admin
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      {/* Exec info strip */}
-      <div className="exec-strip">
-        <div className="exec-strip-label">
-          <span>👷</span> Assigned Executive
-        </div>
-        <div className="exec-strip-body">
-          <div className="exec-info">
-            <div className="exec-avatar">
-              {Utils.initials(execName || execId)}
-            </div>
-            <div>
-              <div className="exec-name">{execName || execId}</div>
-              <div className="exec-id">{execId}</div>
-            </div>
-          </div>
-          <div className="exec-action-btns">
-            <button
-              className="exec-btn call"
-              onClick={() => showToast('Exec mobile available in Phase 5', 'warning')}
-              title="Call Executive"
-            >
-              📞 Call
-            </button>
-            <button
-              className="exec-btn wa"
-              onClick={handleShareWA}
-              title="WhatsApp Executive"
-            >
-              💬 WA
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Share responsibility button */}
-      <button className="share-btn" onClick={handleShareWA}>
-        <span>🔗</span>
-        Share responsibility with {execName || execId}
-      </button>
-    </div>
-  );
-};
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  📁 components/dashboard/PendingCard.jsx
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const PendingCard = ({ account, tcName, showToast }) => {
-  const [expanded, setExpanded] = useState(false);
-
-  const accNo    = account.accountNo  || account.account_no  || '';
-  const name     = account.name       || '';
-  const mobile   = account.mobile     || '';
-  const address  = account.address    || '';
-  const area     = account.area       || '';
-  const apptDate = account.apptDate   || account.appt_date   || '';
-  const remark   = account.tcRemark   || account.tc_remark   || '';
-  const status   = account.status     || '';
-  const score    = account.priorityScore || account.priority_score || 0;
-  const ageH     = account._ageHours  || 0;
-  const urgency  = account._urgency   || 'aging';
-
-  const urgencyLabel = {
-    overdue: '🔴 OVERDUE APPT',
-    appt:    '🟢 APPT TODAY',
-    aging:   `⏱ ${Utils.formatHours(ageH)} IDLE`
-  }[urgency];
-
-  const handleCall = () => {
-    window.location.href = Utils.buildCallLink(mobile);
-  };
-
-  const handleWA = () => {
-    const msg = `Hi, this is ${tcName} calling regarding your ACT router return. ` +
-      `Account: ${accNo}. Please contact us to arrange collection. Thank you.`;
-    window.open(Utils.buildWALink(mobile, msg), '_blank');
-  };
-
-  return (
-    <div className={`pending-card ${urgency}`}>
-      {/* Urgency strip */}
-      <div className="urgency-strip">
-        <span className={`urgency-badge ${urgency}`}>{urgencyLabel}</span>
-        <span className="priority-score">Score <span>{score}</span></span>
-      </div>
-
-      {/* Account info */}
-      <div className="pc-accno">{accNo}</div>
-      <div className="pc-name">{name}</div>
-      <div className="pc-phone">{mobile}</div>
-
-      {/* Chips */}
-      <div className="pc-meta">
-        <span className={`pc-chip status`}>{STATUS_LABELS[status] || status}</span>
-        <span className={`pc-chip age`}>{Utils.formatHours(ageH)}</span>
-        {apptDate && <span className="pc-chip appt-chip">📅 {apptDate}</span>}
-        <span className="pc-chip">{area}</span>
-      </div>
-
-      {/* Address (collapsed) */}
-      {expanded && (
-        <>
-          <div className="pc-addr">{address}</div>
-          {remark && <div className="pc-remark">💬 {remark}</div>}
-        </>
-      )}
-
-      {/* Expand toggle */}
-      <div
-        onClick={() => setExpanded(e => !e)}
-        style={{ fontSize:11, color:'var(--accent)', fontFamily:'var(--fm)',
-          cursor:'pointer', marginBottom:10, userSelect:'none' }}
-      >
-        {expanded ? '▲ Less' : '▼ More details'}
-      </div>
-
-      {/* Shared Responsibility */}
-      <SharedResponsibility account={account} tcName={tcName} showToast={showToast} />
-
-      {/* TC Action buttons */}
-      <div className="pc-actions">
-        <button className="pc-btn call" onClick={handleCall}>📞 Call</button>
-        <button className="pc-btn wa"   onClick={handleWA  }>💬 WA</button>
-        <button className="pc-btn log"
-          onClick={() => showToast('Log call available in Phase 5', 'warning')}>
-          ✏️ Log
-        </button>
-      </div>
-    </div>
-  );
-};
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  📁 components/dashboard/PendingHotList.jsx
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const PendingHotList = ({ hotList, loading, tcName, showToast, onRefresh }) => {
-  if (loading) {
-    return (
-      <div className="hot-list-section">
-        <div className="hot-list-header">
-          <div className="hot-list-title">
-            🔥 Pending Hot List
-            <div style={{ width:60, height:20 }} className="skeleton" />
-          </div>
-        </div>
-        {[1,2].map(i => (
-          <div key={i} style={{ height:120, borderRadius:'var(--r)', marginBottom:10 }} className="skeleton" />
-        ))}
-      </div>
-    );
-  }
-
-  return (
-    <div className="hot-list-section">
-      <div className="hot-list-header">
-        <div className="hot-list-title">
-          🔥 Pending Hot List
-          {hotList.length > 0 && (
-            <span className="hot-badge">{hotList.length} urgent</span>
-          )}
-        </div>
-        <button
-          onClick={onRefresh}
-          style={{ background:'none', border:'none', cursor:'pointer',
-            fontSize:13, color:'var(--accent)', fontFamily:'var(--fm)' }}
-        >
-          ↻ Refresh
-        </button>
-      </div>
-
-      {hotList.length === 0 ? (
-        <div className="hot-empty">
-          <div className="hot-empty-icon">✅</div>
-          <div className="hot-empty-text">No urgent pending accounts</div>
-          <div className="hot-empty-sub">All accounts are within normal follow-up time</div>
-        </div>
-      ) : (
-        <>
-          <div style={{ fontSize:11, color:'var(--text3)', fontFamily:'var(--fm)', marginBottom:10 }}>
-            Accounts idle &gt; 48h or with overdue appointments — sorted by priority
-          </div>
-          {hotList.map((account, i) => (
-            <PendingCard
-              key={account.accountNo || account.account_no || i}
-              account={account}
-              tcName={tcName}
-              showToast={showToast}
-            />
-          ))}
-          {hotList.length >= 10 && (
-            <div style={{ textAlign:'center', fontSize:12, color:'var(--text3)',
-              fontFamily:'var(--fm)', padding:'8px 0' }}>
-              Showing top 10 · See all in Accounts tab
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  );
-};
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  📁 app/dashboard/page.jsx
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const DashboardPage = ({ session, showToast }) => {
-  const { stats, hotList, loading, refresh } = usePendingAccounts(session);
-
-  return (
-    <div className="dash-wrap">
-      {/* Greeting */}
-      <div className="dash-greeting">
-        {Utils.getGreeting()}, {Utils.firstName(session.staffName)} 👋
-      </div>
-      <div className="dash-date">{Utils.getDateStr()}</div>
-
-      {/* Stat cards */}
-      <div className="dash-cards">
-        {STAT_CARDS.map(c => (
-          <div key={c.id} className={`dash-card ${c.cls}`}>
-            <div className="dash-card-icon">{c.icon}</div>
-            <div className="dash-card-val">
-              {loading
-                ? <div style={{width:40,height:32}} className="skeleton" />
-                : (stats[c.id] ?? '—')
-              }
-            </div>
-            <div className="dash-card-lbl">{c.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* 🔥 PENDING HOT LIST */}
-      <PendingHotList
-        hotList={hotList}
-        loading={loading}
-        tcName={session.staffName}
-        showToast={showToast}
-        onRefresh={refresh}
-      />
-    </div>
-  );
-};
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  📁 app/(authenticated)/layout.jsx  — AppShell
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const AppShell = ({ session, onLogout }) => {
-  const [activePage, setActivePage] = useState('dash');
-  const { toast, showToast, hideToast } = useToast();
-
-  // Re-fetch accounts for nav badge count
-  const { hotList } = usePendingAccounts(session);
-
-  const handleLogout = useCallback(() => {
-    SessionStore.clear();
-    onLogout();
-  }, [onLogout]);
-
-  useTokenRefresh(session, handleLogout);
-
-  const ComingSoon = ({ icon, title, sub }) => (
-    <div className="coming-soon">
-      <div className="coming-soon-icon">{icon}</div>
-      <div className="coming-soon-title">{title}</div>
-      <div className="coming-soon-sub">{sub}</div>
-    </div>
-  );
-
-  return (
-    <div className="app">
-      <AppHeader session={session} onLogout={handleLogout} />
-
-      <div className="main-content">
-        <div className={`page${activePage==='dash'     ?' on':''}`}>
-          <DashboardPage session={session} showToast={showToast} />
-        </div>
-        <div className={`page${activePage==='accounts' ?' on':''}`}>
-          <ComingSoon icon="📋" title="Accounts — Phase 5"
-            sub="Smart call queue, log call flow and appointment booking." />
-        </div>
-        <div className={`page${activePage==='earnings' ?' on':''}`}>
-          <ComingSoon icon="💰" title="Earnings — Phase 5"
-            sub="MTD payout, target progress and leaderboard." />
-        </div>
-        <div className={`page${activePage==='report'   ?' on':''}`}>
-          <ComingSoon icon="📊" title="Report — Phase 5"
-            sub="Daily call report, Excel download and WhatsApp send." />
-        </div>
-      </div>
-
-      <BottomNav
-        active={activePage}
-        onChange={setActivePage}
-        hotCount={hotList.length}
-      />
-
-      {toast && <Toast msg={toast.msg} type={toast.type} onDone={hideToast} />}
-    </div>
-  );
-};
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  📁 components/auth/LoginCard.jsx
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const LoginCard = ({ onLogin }) => {
+// ─────────────────────────────────────────────
+//  LOGIN SCREEN
+// ─────────────────────────────────────────────
+const LoginScreen = ({ onLogin }) => {
+  const [city,    setCity]    = useState('CBE');
   const [staffId, setStaffId] = useState('');
   const [pin,     setPin]     = useState('');
+  const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState('');
-  const [shaking, setShaking] = useState(false);
-  const { toast, showToast, hideToast } = useToast();
 
-  const shake = useCallback(() => {
-    setShaking(true); setTimeout(() => setShaking(false), 450);
-  }, []);
-
-  const { login, loading } = useAuth({
-    onSuccess: onLogin,
-    onError: (msg) => { shake(); setError(msg); showToast(msg,'error'); setPin(''); }
-  });
-
-  const handleSubmit = useCallback(() => {
-    if (!staffId.trim()) { showToast('Enter your Staff ID'); return; }
-    if (pin.length < 4)  { showToast('Enter your 4-digit PIN'); return; }
-    setError('');
-    login(staffId, pin);
-  }, [staffId, pin, login]);
+  const handleNum = (n) => { if (pin.length < 4) setPin(p => p + n); };
+  const handleDel = ()  => setPin(p => p.slice(0, -1));
 
   useEffect(() => {
-    if (pin.length === 4 && staffId.trim()) {
-      const t = setTimeout(handleSubmit, 80);
-      return () => clearTimeout(t);
-    }
-  }, [pin, staffId]);
+    if (pin.length === 4 && staffId.trim()) handleLogin();
+  }, [pin]);
+
+  const handleLogin = async () => {
+    if (!staffId.trim() || pin.length < 4) return;
+    setLoading(true); setError('');
+    try {
+      const data = await Api.get({ action: 'login', staffId: staffId.trim().toUpperCase(), pin, city });
+      if (data.role !== 'TELECALLER') {
+        setError('This app is for Telecallers only.');
+        setPin(''); setLoading(false); return;
+      }
+      SS.set(data);
+      onLogin(data);
+    } catch (e) {
+      setError(e.message || 'Invalid credentials');
+      setPin('');
+    } finally { setLoading(false); }
+  };
+
+  const NUMS = ['1','2','3','4','5','6','7','8','9','','0','⌫'];
 
   return (
     <div className="login-screen">
-      <div className={`login-card${shaking?' shake':''}`}>
-        <div className="login-logo-wrap">
-          <BrandLogo size="lg" />
-          <div className="login-title">Telecaller Console</div>
-          <div className="login-sub">CollectPro · VOA Recovery Operations</div>
+      <div className="login-logo">VOA</div>
+      <div className="login-title">CollectPro</div>
+      <div className="login-sub">Telecaller App · Sign in to continue</div>
+
+      <div className="login-card">
+        <div className="field">
+          <label>City</label>
+          <select value={city} onChange={e => setCity(e.target.value)}>
+            <option value="CBE">Coimbatore (CBE)</option>
+            <option value="CHN">Chennai (CHN)</option>
+          </select>
+        </div>
+        <div className="field">
+          <label>Staff ID</label>
+          <input value={staffId} onChange={e => setStaffId(e.target.value)}
+            placeholder="TC_001" autoCapitalize="characters"
+            onKeyDown={e => e.key === 'Enter' && pin.length === 4 && handleLogin()}
+          />
         </div>
 
-        <div className="form-group">
-          <label className="form-label">Staff ID</label>
-          <input className="form-input" type="text" value={staffId}
-            onChange={e => setStaffId(e.target.value.toUpperCase())}
-            onKeyDown={e => e.key==='Enter' && handleSubmit()}
-            placeholder="e.g. TC_001" autoCapitalize="characters"
-            autoCorrect="off" spellCheck={false} disabled={loading} />
+        <label style={{fontSize:12,fontWeight:700,color:'var(--text2)',display:'block',marginBottom:8,letterSpacing:'.3px',textTransform:'uppercase'}}>PIN</label>
+        <div className="pin-wrap">
+          {[0,1,2,3].map(i => <div key={i} className={`pin-dot ${i < pin.length ? 'filled' : ''}`}/>)}
         </div>
 
-        <div className="form-group" style={{marginBottom:8}}>
-          <label className="form-label">PIN</label>
-          <input className="form-input pin-field" type="password"
-            inputMode="numeric" pattern="[0-9]*" maxLength={4} value={pin}
-            onChange={e => setPin(Utils.sanitizePin(e.target.value))}
-            onKeyDown={e => e.key==='Enter' && handleSubmit()}
-            placeholder="• • • •" disabled={loading} />
+        <div className="numpad">
+          {NUMS.map((n, i) => (
+            <button key={i} className={`num-btn ${n === '⌫' ? 'del' : ''}`}
+              onClick={() => n === '⌫' ? handleDel() : n !== '' ? handleNum(n) : null}
+              disabled={loading}
+            >{n}</button>
+          ))}
         </div>
 
-        <PinDots length={pin.length} />
+        {error && <div style={{background:'var(--red-lt)',border:'1px solid #fecaca',borderRadius:8,padding:'10px 12px',fontSize:13,color:'var(--red)',marginBottom:12,fontWeight:500}}>{error}</div>}
 
-        <button className="btn-login" onClick={handleSubmit} disabled={loading}>
-          {loading ? <><div className="spinner"/><span>Signing in...</span></> : 'Sign In →'}
+        <button className="btn btn-primary" onClick={handleLogin}
+          disabled={loading || !staffId.trim() || pin.length < 4}>
+          {loading ? 'Signing in…' : 'Sign In →'}
         </button>
-
-        {error && <div className="login-error">{error}</div>}
       </div>
-      {toast && <Toast msg={toast.msg} type={toast.type} onDone={hideToast} />}
     </div>
   );
 };
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  📁 app/page.jsx — Root auth gate
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ─────────────────────────────────────────────
+//  HOME TAB
+// ─────────────────────────────────────────────
+const HomeTab = ({ session, dashboard, onTabChange }) => {
+  const d = dashboard;
+  return (
+    <div>
+      <div className="dash-header">
+        <div className="dash-greeting">👋 Good to see you,</div>
+        <div className="dash-name">{session.staffName}</div>
+        <div className="dash-stats">
+          <div className="stat-pill">
+            <div className="stat-pill-val">{d?.total || 0}</div>
+            <div className="stat-pill-lbl">Assigned</div>
+          </div>
+          <div className="stat-pill">
+            <div className="stat-pill-val">{d?.apptFixed || 0}</div>
+            <div className="stat-pill-lbl">Appt Fixed</div>
+          </div>
+          <div className="stat-pill">
+            <div className="stat-pill-val">{d?.callsToday || 0}</div>
+            <div className="stat-pill-lbl">Today's Calls</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="dash-cards">
+        {[
+          { icon:'📋', title:'My Accounts', sub: `${d?.fresh || 0} fresh · ${d?.called || 0} called`, count: d?.total || 0, tab:'accounts' },
+          { icon:'📅', title:'Appointments', sub:'Fixed & upcoming', count: d?.apptFixed || 0, tab:'accounts' },
+          { icon:'📊', title:'Daily Report', sub:"Today's call log", count: d?.callsToday || 0, tab:'report' },
+        ].map(c => (
+          <div key={c.tab+c.title} className="dash-card" onClick={() => onTabChange(c.tab)}>
+            <div className="dash-card-icon">{c.icon}</div>
+            <div className="dash-card-info">
+              <div className="dash-card-title">{c.title}</div>
+              <div className="dash-card-sub">{c.sub}</div>
+            </div>
+            <div className="dash-card-count">{c.count}</div>
+          </div>
+        ))}
+      </div>
+
+      {d?.strikes > 0 && (
+        <div style={{margin:'0 14px',padding:'12px 14px',background:'var(--red-lt)',border:'1px solid #fecaca',borderRadius:'var(--r)',fontSize:13,color:'var(--red)',fontWeight:600}}>
+          ⚠️ {d.strikes} strike account{d.strikes > 1 ? 's' : ''} — needs attention
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────
+//  LOG CALL SHEET
+// ─────────────────────────────────────────────
+const LogCallSheet = ({ account, session, onClose, onSuccess, showToast }) => {
+  const [outcome,  setOutcome]  = useState('');
+  const [remark,   setRemark]   = useState('');
+  const [apptDate, setApptDate] = useState(tomorrowStr());
+  const [loading,  setLoading]  = useState(false);
+
+  const selectedOutcome = ALL_OUTCOMES.find(o => o.value === outcome);
+  const needsDate = selectedOutcome?.needsDate;
+
+  const handleSubmit = async () => {
+    if (!outcome) { showToast('Select an outcome', 'error'); return; }
+    if (needsDate && !apptDate) { showToast('Select appointment date', 'error'); return; }
+    setLoading(true);
+    try {
+      await Api.post({
+        action: 'log_call', token: session.token,
+        city: session.city, staffId: session.staffId,
+        accountNo: account.accountNo, outcome,
+        tcRemark: remark, apptDate: needsDate ? apptDate : ''
+      });
+      onSuccess(`${account.name} → ${outcome}`);
+      onClose();
+    } catch (e) {
+      showToast(e.message, 'error');
+    } finally { setLoading(false); }
+  };
+
+  const getOutcomeClass = (group, val) => {
+    if (outcome !== val) return '';
+    const map = { Connected:'selected-green', Rescheduled:'selected-amber', 'Not Reachable':'selected-red', 'Issues / Special':'selected-purple', 'Non Recoverable':'selected-red' };
+    return map[group] || 'selected';
+  };
+
+  return (
+    <div className="overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="sheet">
+        <div className="sheet-handle"/>
+        <div className="sheet-title">Log Call Outcome</div>
+        <div className="sheet-sub">Record the result of your call</div>
+
+        <div className="sheet-customer">
+          <div className="sheet-customer-name">{account.name}</div>
+          <div className="sheet-customer-acc">📞 {account.mobile} · {account.accountNo}</div>
+        </div>
+
+        {OUTCOME_GROUPS.map(group => (
+          <div key={group.title} className="outcome-group">
+            <div className="outcome-group-title">{group.title}</div>
+            <div className="outcome-grid">
+              {group.items.map(item => (
+                <button key={item.value}
+                  className={`outcome-btn ${outcome === item.value ? getOutcomeClass(group.title, item.value) : ''}`}
+                  onClick={() => setOutcome(item.value)}>
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+
+        {needsDate && (
+          <>
+            <div className="section-label" style={{marginBottom:8}}>Appointment Date</div>
+            <input type="date" className="date-input" value={apptDate}
+              min={todayStr()} onChange={e => setApptDate(e.target.value)}/>
+          </>
+        )}
+
+        <div className="section-label" style={{marginBottom:8}}>Remark (optional)</div>
+        <textarea className="remark-input" value={remark} onChange={e => setRemark(e.target.value)}
+          placeholder="Add any notes about this call…" rows={3}/>
+
+        <button className="submit-btn" onClick={handleSubmit}
+          disabled={!outcome || loading}>
+          {loading ? 'Saving…' : '✅ Submit Outcome'}
+        </button>
+        <div className="cancel-link" onClick={onClose}>Cancel</div>
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────
+//  ACCOUNT CARD
+// ─────────────────────────────────────────────
+const AccountCard = ({ account, onLog }) => {
+  const [expanded, setExpanded] = useState(false);
+  const p = account.smartQueuePriority || 6;
+
+  const call = () => {
+    window.location.href = `tel:${account.mobile}`;
+  };
+  const whatsapp = () => {
+    const msg = encodeURIComponent(`Hi, I'm calling regarding your ACT Fiber connection. Account No: ${account.accountNo}`);
+    window.open(`https://wa.me/91${account.mobile.replace(/\D/g,'')}?text=${msg}`, '_blank');
+  };
+
+  return (
+    <div className={`account-card ${getCardPriorityClass(p)}`} onClick={() => setExpanded(e => !e)}>
+      <div className="card-top">
+        <div>
+          <div className="card-name">{account.name}</div>
+          <div className="card-accno">{account.accountNo}</div>
+        </div>
+        <span className={`status-badge ${getStatusBadgeClass(account.status)}`}>
+          {getStatusLabel(account.status)}
+        </span>
+      </div>
+
+      <div className="card-info">
+        <div className="card-row">
+          <span className="card-row-icon">📞</span>
+          <span>{account.mobile}</span>
+        </div>
+        {expanded && (
+          <>
+            <div className="card-row">
+              <span className="card-row-icon">📍</span>
+              <span>{account.address}, {account.area}</span>
+            </div>
+            {account.srNumber && (
+              <div className="card-row">
+                <span className="card-row-icon">🎫</span>
+                <span>SR: {account.srNumber}</span>
+              </div>
+            )}
+            {account.tcRemark && (
+              <div className="card-row">
+                <span className="card-row-icon">💬</span>
+                <span style={{color:'var(--text3)'}}>{account.tcRemark}</span>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {account.apptDate && (
+        <div className="card-appt">
+          📅 Appointment: <strong>{account.apptDate}</strong>
+        </div>
+      )}
+
+      {account.strikeCount > 0 && (
+        <div className="strikes">
+          {[1,2,3].map(i => (
+            <div key={i} className={`strike-dot ${i <= account.strikeCount ? 'active' : 'inactive'}`}/>
+          ))}
+          <span style={{fontSize:11,color:'var(--red)',marginLeft:4,fontWeight:600}}>{account.strikeCount} strike{account.strikeCount>1?'s':''}</span>
+        </div>
+      )}
+
+      <div className="card-actions" onClick={e => e.stopPropagation()}>
+        <button className="card-btn btn-call" onClick={call}>📞 Call</button>
+        <button className="card-btn btn-wa"   onClick={whatsapp}>💬 WhatsApp</button>
+        <button className="card-btn btn-log"  onClick={() => onLog(account)}>✏️ Log</button>
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────
+//  ACCOUNTS TAB
+// ─────────────────────────────────────────────
+const FILTERS = [
+  { label: 'All',        value: null         },
+  { label: 'Fresh',      value: 'FRESH'      },
+  { label: 'Called',     value: 'CALLED'     },
+  { label: 'Appt Fixed', value: 'APPT_FIXED' },
+  { label: 'Rescheduled',value: 'RESCHEDULED'},
+  { label: 'Not Reached',value: 'NOT_REACHABLE'},
+];
+
+const AccountsTab = ({ session, showToast, onDashboardRefresh }) => {
+  const [accounts, setAccounts]    = useState([]);
+  const [loading,  setLoading]     = useState(true);
+  const [filter,   setFilter]      = useState(null);
+  const [logTarget,setLogTarget]   = useState(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await Api.get({
+        action: 'get_tc_accounts', token: session.token,
+        staffId: session.staffId, city: session.city
+      });
+      setAccounts(Array.isArray(data) ? data : []);
+    } catch (e) {
+      showToast(e.message, 'error');
+    } finally { setLoading(false); }
+  }, [session]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const filtered = useMemo(() =>
+    filter ? accounts.filter(a => a.status === filter) : accounts,
+    [accounts, filter]
+  );
+
+  const handleLogSuccess = (msg) => {
+    showToast(msg, 'success');
+    load();
+    onDashboardRefresh();
+  };
+
+  return (
+    <div>
+      <div className="list-header">
+        <div className="list-header-top">
+          <div className="list-title">
+            My Accounts <span style={{color:'var(--text3)',fontSize:13}}>({filtered.length})</span>
+          </div>
+          <button className="refresh-btn" onClick={load}>↻ Refresh</button>
+        </div>
+        <div className="filter-chips">
+          {FILTERS.map(f => (
+            <button key={f.label} className={`chip-btn ${filter === f.value ? 'active' : ''}`}
+              onClick={() => setFilter(f.value)}>
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{paddingTop: 10}}>
+        {loading ? (
+          [1,2,3].map(i => <div key={i} className="skel-card skeleton"/>)
+        ) : filtered.length === 0 ? (
+          <div className="empty">
+            <div className="empty-icon">📭</div>
+            <div className="empty-title">No accounts {filter ? 'with this status' : 'assigned'}</div>
+            <div className="empty-sub">
+              {filter ? 'Try a different filter' : 'Accounts will appear here once the admin uploads and allocates the base.'}
+            </div>
+          </div>
+        ) : (
+          filtered.map(a => (
+            <AccountCard key={a.accountNo} account={a} onLog={setLogTarget}/>
+          ))
+        )}
+      </div>
+
+      {logTarget && (
+        <LogCallSheet
+          account={logTarget}
+          session={session}
+          onClose={() => setLogTarget(null)}
+          onSuccess={handleLogSuccess}
+          showToast={showToast}
+        />
+      )}
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────
+//  DAILY REPORT TAB
+// ─────────────────────────────────────────────
+const ReportTab = ({ session, showToast }) => {
+  const [report,  setReport]  = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await Api.get({
+        action: 'get_tc_daily_report', token: session.token,
+        staffId: session.staffId, city: session.city
+      });
+      setReport(data);
+    } catch (e) {
+      showToast(e.message, 'error');
+    } finally { setLoading(false); }
+  }, [session]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const downloadReport = () => {
+    if (!report?.reportRows?.length) { showToast('No calls today to download', 'error'); return; }
+    const ws = XLSX.utils.json_to_sheet(report.reportRows.map(r => ({
+      'Account No':  r.accountNo,
+      'Name':        r.name,
+      'Mobile':      r.mobile,
+      'Outcome':     r.outcome,
+      'Remark':      r.remark,
+      'Appt Date':   r.apptDate,
+      'Time':        r.timestamp,
+    })));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Daily Report');
+    XLSX.writeFile(wb, `TC_Report_${session.staffId}_${report.date}.xlsx`);
+    showToast('Report downloaded', 'success');
+  };
+
+  if (loading) return (
+    <div style={{padding:14}}>
+      {[1,2,3].map(i => <div key={i} className="skel-card skeleton" style={{height:60}}/>)}
+    </div>
+  );
+
+  return (
+    <div>
+      <div className="report-header">
+        <div className="report-date">{report?.date || 'Today'}</div>
+        <div className="report-title">Daily Call Report</div>
+        <div className="report-stat-row">
+          <div className="report-stat">
+            <div className="report-stat-val">{report?.callsToday || 0}</div>
+            <div className="report-stat-lbl">Calls Today</div>
+          </div>
+          <div className="report-stat">
+            <div className="report-stat-val">{report?.apptFixed || 0}</div>
+            <div className="report-stat-lbl">Appt Fixed</div>
+          </div>
+          <div className="report-stat">
+            <div className="report-stat-val">{report?.totalAssigned || 0}</div>
+            <div className="report-stat-lbl">Total</div>
+          </div>
+        </div>
+      </div>
+
+      {report?.reportRows?.length > 0 ? (
+        <div className="report-section">
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
+            <div className="section-label" style={{margin:0}}>Call Log</div>
+            <button onClick={downloadReport}
+              style={{background:'var(--green-lt)',border:'1px solid #86efac',color:'var(--green)',borderRadius:8,padding:'5px 12px',fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:'var(--fh)'}}>
+              📥 Download
+            </button>
+          </div>
+          {report.reportRows.map((row, i) => (
+            <div key={i} className="report-row">
+              <div className="report-row-time">{row.timestamp?.slice(11,16) || '--'}</div>
+              <div className="report-row-info">
+                <div className="report-row-name">{row.name}</div>
+                <div className="report-row-outcome">{row.outcome} {row.remark ? `· ${row.remark}` : ''}</div>
+              </div>
+              <span className={`status-badge ${getStatusBadgeClass(row.outcome)}`} style={{fontSize:9}}>
+                {row.outcome}
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="empty">
+          <div className="empty-icon">📊</div>
+          <div className="empty-title">No calls logged today</div>
+          <div className="empty-sub">Calls you log today will appear here.</div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────
+//  APP SHELL
+// ─────────────────────────────────────────────
+const NAV = [
+  { id: 'home',     icon: '🏠', label: 'Home'     },
+  { id: 'accounts', icon: '📋', label: 'Accounts'  },
+  { id: 'report',   icon: '📊', label: 'Report'    },
+];
+
+const AppShell = ({ session, onLogout }) => {
+  const [tab,       setTab]       = useState('home');
+  const [dashboard, setDashboard] = useState(null);
+  const [toast,     showToast]    = useToast();
+
+  const loadDashboard = useCallback(async () => {
+    try {
+      const d = await Api.get({
+        action: 'get_tc_dashboard', token: session.token,
+        staffId: session.staffId, city: session.city
+      });
+      setDashboard(d);
+    } catch (e) {}
+  }, [session]);
+
+  useEffect(() => { loadDashboard(); }, [loadDashboard]);
+
+  const pages = {
+    home:     <HomeTab session={session} dashboard={dashboard} onTabChange={setTab}/>,
+    accounts: <AccountsTab session={session} showToast={showToast} onDashboardRefresh={loadDashboard}/>,
+    report:   <ReportTab   session={session} showToast={showToast}/>,
+  };
+
+  return (
+    <div className="app">
+      <div className="header">
+        <div className="brand">
+          <div className="brand-logo">VOA</div>
+          <div>
+            <div className="brand-name">CollectPro</div>
+            <div className="brand-role">Telecaller Portal</div>
+          </div>
+        </div>
+        <div className="header-right">
+          <span className="chip">{session.city}</span>
+          <span className="chip" style={{background:'rgba(255,255,255,.3)'}}>{session.staffName?.split(' ')[0]}</span>
+          <button className="logout-btn" onClick={onLogout} title="Logout">✕</button>
+        </div>
+      </div>
+
+      <div className="page">
+        {pages[tab]}
+      </div>
+
+      <div className="nav">
+        {NAV.map(n => (
+          <button key={n.id} className={`nav-item ${tab === n.id ? 'active' : ''}`} onClick={() => setTab(n.id)}>
+            <span className="nav-icon">{n.icon}</span>
+            <span className="nav-label">{n.label}</span>
+            {tab === n.id && <div className="nav-dot"/>}
+          </button>
+        ))}
+      </div>
+
+      <Toast msg={toast.msg} type={toast.type}/>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────
+//  ROOT
+// ─────────────────────────────────────────────
 const App = () => {
-  const [session,  setSession]  = useState(null);
-  const [checking, setChecking] = useState(true);
+  const [session, setSession] = useState(SS.get);
 
-  useEffect(() => {
-    const saved = SessionStore.load();
-    if (saved) setSession(saved);
-    setChecking(false);
-  }, []);
+  const handleLogin  = (s) => setSession(s);
+  const handleLogout = ()  => { SS.clear(); setSession(null); };
 
-  if (checking) return (
-    <div className="load-overlay">
-      <div className="load-spinner"/>
-      <div className="load-text">CollectPro loading...</div>
-    </div>
-  );
-
-  return session
-    ? <AppShell session={session} onLogout={() => setSession(null)} />
-    : <LoginCard onLogin={s => setSession(s)} />;
+  if (!session) return <LoginScreen onLogin={handleLogin}/>;
+  return <AppShell session={session} onLogout={handleLogout}/>;
 };
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
 </body>
 </html>
