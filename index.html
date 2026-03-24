@@ -604,17 +604,23 @@ function usePendingAccounts(session) {
     setLoading(true);
     setError(null);
     try {
+      // tc_init: single call returns accounts + dashboard + earnings
       const data = await Api.get({
-        action:  'get_tc_accounts',
+        action:  'tc_init',
         city:    session.city,
         staffId: session.staffId,
         token:   session.token
       });
-      setAccounts(Array.isArray(data) ? data : []);
+      // tc_init returns { dashboard, accounts, earnings }
+      const accounts = data.accounts || data;
+      setAccounts(Array.isArray(accounts) ? accounts : []);
       setLastFetch(Date.now());
     } catch (e) {
-      setError(e.message);
-      setAccounts([]);
+      // Fallback: individual call if merged route fails (e.g. old backend)
+      try {
+        const data = await Api.get({ action:'get_tc_accounts', city:session.city, staffId:session.staffId, token:session.token });
+        setAccounts(Array.isArray(data) ? data : []);
+      } catch(e2) { setError(e2.message); setAccounts([]); }
     } finally {
       setLoading(false);
     }
@@ -1111,13 +1117,15 @@ const LogCallSheet = ({ account, session, onClose, onSuccess, showToast }) => {
     if (needsDate && !apptDate) { showToast('Select appointment date','error'); return; }
     setLoading(true);
     try {
-      await Api.post({
-        action:'log_call', token:session.token,
+      // log_call_and_refresh: logs + returns fresh queue in 1 call
+      const result = await Api.post({
+        action:'log_call_and_refresh', token:session.token,
         city:session.city, staffId:session.staffId,
         accountNo:account.accountNo, outcome,
         tcRemark:remark, apptDate:needsDate?apptDate:''
       });
-      onSuccess(account.name + ' → ' + outcome);
+      // Pass fresh accounts back to parent to avoid extra refresh call
+      onSuccess(account.name + ' → ' + outcome, result?.accounts);
       onClose();
     } catch(e) { showToast(e.message,'error'); }
     finally { setLoading(false); }
@@ -1233,7 +1241,13 @@ const AccountsPage = ({ session, showToast }) => {
   const [filter,  setFilter]   = useState(null);
   const [logTarget,setLogTarget]= useState(null);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (prefetchedAccounts) => {
+    // If tc_init already loaded accounts, use them directly (no extra call)
+    if (prefetchedAccounts && Array.isArray(prefetchedAccounts)) {
+      setAccounts(prefetchedAccounts);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const d = await Api.get({action:'get_tc_accounts',token:session.token,staffId:session.staffId,city:session.city});
@@ -1271,7 +1285,7 @@ const AccountsPage = ({ session, showToast }) => {
         }
       </div>
       {logTarget&&<LogCallSheet account={logTarget} session={session} onClose={()=>setLogTarget(null)}
-        onSuccess={msg=>{showToast(msg,'success');load();}} showToast={showToast}/>}
+        onSuccess={(msg, freshAccounts)=>{showToast(msg,'success');freshAccounts?setAccounts(freshAccounts):load();}} showToast={showToast}/>}
     </div>
   );
 };
