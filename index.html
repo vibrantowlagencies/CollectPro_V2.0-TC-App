@@ -1,3 +1,4 @@
+<!-- TC App v3.1.0 — Babel precompiled, no runtime JSX -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -34,7 +35,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
@@ -410,47 +411,86 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);-webkit-font-s
 <body>
 <div id="root"></div>
 
-<script type="text/babel">
-const { useState, useEffect, useCallback, useRef, useMemo } = React;
+<script>
+const {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo
+} = React;
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  📁 lib/constants.js
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const CONFIG = {
-  API_URL:      'https://script.google.com/macros/s/AKfycbyRb7oEMdppJKouU5xCAQVq-IauFaugqXslscYChoFaXkvWzIQzHCg9q5u3AZWAlxB_Pg/exec',
-  CLIENT_ID:    'VOA_CBE',
-  SESSION_KEY:  'voa_session_tc',
-  REFRESH_MS:   25 * 60 * 1000,
+  API_URL: 'https://script.google.com/macros/s/AKfycbyRb7oEMdppJKouU5xCAQVq-IauFaugqXslscYChoFaXkvWzIQzHCg9q5u3AZWAlxB_Pg/exec',
+  CLIENT_ID: 'VOA_CBE',
+  SESSION_KEY: 'voa_session_tc',
+  REFRESH_MS: 25 * 60 * 1000,
   ALLOWED_ROLE: 'TELECALLER',
-  APP_VERSION:  'v3.0.0',
+  APP_VERSION: 'v3.0.0',
   CITY_DEFAULT: 'CBE',
   // Aging thresholds
-  AGING_HOURS:  48,   // Show in hot list after 48h idle
-  OVERDUE_FLAG: true, // Show overdue appointments
+  AGING_HOURS: 48,
+  // Show in hot list after 48h idle
+  OVERDUE_FLAG: true // Show overdue appointments
 };
-
-const NAV_ITEMS = [
-  { id:'dash',     icon:'🏠', label:'Home'     },
-  { id:'accounts', icon:'📋', label:'Accounts' },
-  { id:'earnings', icon:'💰', label:'Earnings' },
-  { id:'report',   icon:'📊', label:'Report'   },
-];
-
-const STAT_CARDS = [
-  { id:'total',   cls:'orange', icon:'📋', label:'My Accounts'   },
-  { id:'appt',    cls:'green',  icon:'📅', label:'Appts Fixed'   },
-  { id:'called',  cls:'blue',   icon:'📞', label:'Calls Today'   },
-  { id:'pending', cls:'red',    icon:'⚡', label:'Still Pending' },
-];
+const NAV_ITEMS = [{
+  id: 'dash',
+  icon: '🏠',
+  label: 'Home'
+}, {
+  id: 'accounts',
+  icon: '📋',
+  label: 'Accounts'
+}, {
+  id: 'earnings',
+  icon: '💰',
+  label: 'Earnings'
+}, {
+  id: 'report',
+  icon: '📊',
+  label: 'Report'
+}];
+const STAT_CARDS = [{
+  id: 'total',
+  cls: 'orange',
+  icon: '📋',
+  label: 'My Accounts'
+}, {
+  id: 'appt',
+  cls: 'green',
+  icon: '📅',
+  label: 'Appts Fixed'
+}, {
+  id: 'called',
+  cls: 'blue',
+  icon: '📞',
+  label: 'Calls Today'
+}, {
+  id: 'pending',
+  cls: 'red',
+  icon: '⚡',
+  label: 'Still Pending'
+}];
 
 // Status → human label map
 const STATUS_LABELS = {
-  FRESH:'Fresh', CALLED:'Called', APPT_FIXED:'Appt Fixed',
-  NOT_VISITED:'Not Visited', RESCHEDULED:'Rescheduled',
-  NOT_REACHABLE:'Not Reachable', STRIKE_1:'Strike 1',
-  STRIKE_2:'Strike 2', STRIKE_3:'Strike 3',
-  ISSUE_REFUND:'Refund Issue', ISSUE_RECONNECTION:'Reconnection',
-  ISSUE_MAIL:'Mail Confirm', ISSUE_JBOX:'JBox Issue', ISSUE_ADDR:'Addr Change'
+  FRESH: 'Fresh',
+  CALLED: 'Called',
+  APPT_FIXED: 'Appt Fixed',
+  NOT_VISITED: 'Not Visited',
+  RESCHEDULED: 'Rescheduled',
+  NOT_REACHABLE: 'Not Reachable',
+  STRIKE_1: 'Strike 1',
+  STRIKE_2: 'Strike 2',
+  STRIKE_3: 'Strike 3',
+  ISSUE_REFUND: 'Refund Issue',
+  ISSUE_RECONNECTION: 'Reconnection',
+  ISSUE_MAIL: 'Mail Confirm',
+  ISSUE_JBOX: 'JBox Issue',
+  ISSUE_ADDR: 'Addr Change'
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -460,8 +500,8 @@ const Api = {
   async get(params) {
     const url = new URL(CONFIG.API_URL);
     url.searchParams.append('client_id', CONFIG.CLIENT_ID);
-    Object.entries(params).forEach(([k,v]) => url.searchParams.append(k, String(v)));
-    const res  = await fetch(url.toString());
+    Object.entries(params).forEach(([k, v]) => url.searchParams.append(k, String(v)));
+    const res = await fetch(url.toString());
     if (!res.ok) throw new Error('Network error: ' + res.status);
     const json = await res.json();
     if (!json.success) throw new Error(json.error || 'Request failed');
@@ -470,8 +510,13 @@ const Api = {
   async post(body) {
     const r = await fetch(CONFIG.API_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ client_id: CONFIG.CLIENT_ID, ...body })
+      headers: {
+        'Content-Type': 'text/plain'
+      },
+      body: JSON.stringify({
+        client_id: CONFIG.CLIENT_ID,
+        ...body
+      })
     });
     if (!r.ok) throw new Error('Network error: ' + r.status);
     const j = await r.json();
@@ -484,18 +529,31 @@ const Api = {
 //  📁 lib/session.js
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const SessionStore = {
-  save(data) { try { localStorage.setItem(CONFIG.SESSION_KEY, JSON.stringify(data)); } catch {} },
+  save(data) {
+    try {
+      localStorage.setItem(CONFIG.SESSION_KEY, JSON.stringify(data));
+    } catch {}
+  },
   load() {
     try {
       const raw = localStorage.getItem(CONFIG.SESSION_KEY);
       if (!raw) return null;
       const s = JSON.parse(raw);
       const parts = (s.token || '').split('|');
-      if (parts.length !== 5 || Date.now() > parseInt(parts[4])) { this.clear(); return null; }
+      if (parts.length !== 5 || Date.now() > parseInt(parts[4])) {
+        this.clear();
+        return null;
+      }
       return s;
-    } catch { return null; }
+    } catch {
+      return null;
+    }
   },
-  clear() { try { localStorage.removeItem(CONFIG.SESSION_KEY); } catch {} }
+  clear() {
+    try {
+      localStorage.removeItem(CONFIG.SESSION_KEY);
+    } catch {}
+  }
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -510,95 +568,158 @@ const Utils = {
   },
   getDateStr() {
     return new Date().toLocaleDateString('en-IN', {
-      weekday:'long', day:'numeric', month:'long', year:'numeric'
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
     });
   },
-  sanitizePin: (v) => String(v).replace(/\D/g,'').slice(0,4),
-  firstName:   (n) => (n||'').split(' ')[0],
-  initials:    (n) => (n||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(),
+  sanitizePin: v => String(v).replace(/\D/g, '').slice(0, 4),
+  firstName: n => (n || '').split(' ')[0],
+  initials: n => (n || '').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
   hoursAgo(isoStr) {
     if (!isoStr) return 0;
     return Math.round((Date.now() - new Date(isoStr).getTime()) / 3600000);
   },
   formatHours(h) {
     if (h < 24) return h + 'h ago';
-    return Math.floor(h/24) + 'd ago';
+    return Math.floor(h / 24) + 'd ago';
   },
   buildWALink(mobile, msg) {
-    const m = String(mobile).replace(/\D/g,'');
+    const m = String(mobile).replace(/\D/g, '');
     const num = m.length === 10 ? '91' + m : m;
     return `https://wa.me/${num}?text=${encodeURIComponent(msg)}`;
   },
   buildCallLink(mobile) {
-    return 'tel:' + String(mobile).replace(/\D/g,'');
+    return 'tel:' + String(mobile).replace(/\D/g, '');
   },
   todayStr() {
     const d = new Date();
-    return d.getFullYear() + '-' +
-      String(d.getMonth()+1).padStart(2,'0') + '-' +
-      String(d.getDate()).padStart(2,'0');
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   }
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  OUTCOME GROUPS — for LogCallSheet
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const OUTCOME_GROUPS = [
-  { title:'Connected',       color:'green',  items:[
-    { label:'✅ Appt Fixed',       value:'Appt Fixed',       needsDate:true  },
-    { label:'📞 Called / Spoke',   value:'Called',           needsDate:false },
-  ]},
-  { title:'Rescheduled',     color:'amber',  items:[
-    { label:'📅 Rescheduled',      value:'Rescheduled',      needsDate:false },
-    { label:'✈️ Out of Station',   value:'Out of Station',   needsDate:false },
-    { label:'🔁 Call Back',        value:'Call Back Request',needsDate:false },
-  ]},
-  { title:'Not Reachable',   color:'red',    items:[
-    { label:'📴 Switch Off',       value:'Switch Off',       needsDate:false },
-    { label:'📵 RNR / Busy',       value:'RNR / Busy',       needsDate:false },
-    { label:'🚫 Incoming Barred',  value:'Incoming Barred',  needsDate:false },
-  ]},
-  { title:'Issues',          color:'purple', items:[
-    { label:'💰 Refund Issue',     value:'Refund Issue',     needsDate:false },
-    { label:'🔌 Reconnection',     value:'Reconnection',     needsDate:false },
-    { label:'📧 Mail Confirm',     value:'Mail Confirmation',needsDate:false },
-    { label:'📦 Junction Box',     value:'Junction Box Issue',needsDate:false},
-    { label:'📍 Address Change',   value:'Address Change',   needsDate:false },
-  ]},
-  { title:'Non Recoverable', color:'red',    items:[
-    { label:'❌ Wrong Number',     value:'Wrong Number',     needsDate:false },
-    { label:'🏠 Not Willing',      value:'Not Willing',      needsDate:false },
-    { label:'📍 Addr Not Found',   value:'Address Not Found',needsDate:false },
-    { label:'✅ Already Collected',value:'Already Collected',needsDate:false },
-  ]},
-];
+const OUTCOME_GROUPS = [{
+  title: 'Connected',
+  color: 'green',
+  items: [{
+    label: '✅ Appt Fixed',
+    value: 'Appt Fixed',
+    needsDate: true
+  }, {
+    label: '📞 Called / Spoke',
+    value: 'Called',
+    needsDate: false
+  }]
+}, {
+  title: 'Rescheduled',
+  color: 'amber',
+  items: [{
+    label: '📅 Rescheduled',
+    value: 'Rescheduled',
+    needsDate: false
+  }, {
+    label: '✈️ Out of Station',
+    value: 'Out of Station',
+    needsDate: false
+  }, {
+    label: '🔁 Call Back',
+    value: 'Call Back Request',
+    needsDate: false
+  }]
+}, {
+  title: 'Not Reachable',
+  color: 'red',
+  items: [{
+    label: '📴 Switch Off',
+    value: 'Switch Off',
+    needsDate: false
+  }, {
+    label: '📵 RNR / Busy',
+    value: 'RNR / Busy',
+    needsDate: false
+  }, {
+    label: '🚫 Incoming Barred',
+    value: 'Incoming Barred',
+    needsDate: false
+  }]
+}, {
+  title: 'Issues',
+  color: 'purple',
+  items: [{
+    label: '💰 Refund Issue',
+    value: 'Refund Issue',
+    needsDate: false
+  }, {
+    label: '🔌 Reconnection',
+    value: 'Reconnection',
+    needsDate: false
+  }, {
+    label: '📧 Mail Confirm',
+    value: 'Mail Confirmation',
+    needsDate: false
+  }, {
+    label: '📦 Junction Box',
+    value: 'Junction Box Issue',
+    needsDate: false
+  }, {
+    label: '📍 Address Change',
+    value: 'Address Change',
+    needsDate: false
+  }]
+}, {
+  title: 'Non Recoverable',
+  color: 'red',
+  items: [{
+    label: '❌ Wrong Number',
+    value: 'Wrong Number',
+    needsDate: false
+  }, {
+    label: '🏠 Not Willing',
+    value: 'Not Willing',
+    needsDate: false
+  }, {
+    label: '📍 Addr Not Found',
+    value: 'Address Not Found',
+    needsDate: false
+  }, {
+    label: '✅ Already Collected',
+    value: 'Already Collected',
+    needsDate: false
+  }]
+}];
 const ALL_OUTCOMES = OUTCOME_GROUPS.flatMap(g => g.items);
-
-const getStatusBadgeClass = (s) => {
-  if (s==='FRESH')          return 'sb-fresh';
-  if (s==='CALLED')         return 'sb-called';
-  if (s==='APPT_FIXED')     return 'sb-appt';
-  if (s==='RESCHEDULED')    return 'sb-rescheduled';
-  if (s==='NOT_REACHABLE'||s==='NOT_VISITED') return 'sb-nr';
-  if (s.startsWith('ISSUE_'))  return 'sb-issue';
+const getStatusBadgeClass = s => {
+  if (s === 'FRESH') return 'sb-fresh';
+  if (s === 'CALLED') return 'sb-called';
+  if (s === 'APPT_FIXED') return 'sb-appt';
+  if (s === 'RESCHEDULED') return 'sb-rescheduled';
+  if (s === 'NOT_REACHABLE' || s === 'NOT_VISITED') return 'sb-nr';
+  if (s.startsWith('ISSUE_')) return 'sb-issue';
   if (s.startsWith('STRIKE_')) return 'sb-strike';
-  if (s.startsWith('NR_'))     return 'sb-nr';
+  if (s.startsWith('NR_')) return 'sb-nr';
   return 'sb-fresh';
 };
-const getCardPriClass = (p) => p<=1?'p1':p<=2?'p2':p<=3?'p3':'pf';
+const getCardPriClass = p => p <= 1 ? 'p1' : p <= 2 ? 'p2' : p <= 3 ? 'p3' : 'pf';
 const todayStr = () => new Date().toISOString().split('T')[0];
-const tomorrowStr = () => { const d=new Date(); d.setDate(d.getDate()+1); return d.toISOString().split('T')[0]; };
+const tomorrowStr = () => {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().split('T')[0];
+};
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  📁 hooks/usePendingAccounts.js
 //  Fetches TC accounts and builds hot list + stats
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function usePendingAccounts(session) {
-  const [accounts,  setAccounts]  = useState([]);
-  const [loading,   setLoading]   = useState(true);
-  const [error,     setError]     = useState(null);
+  const [accounts, setAccounts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [lastFetch, setLastFetch] = useState(null);
-
   const fetch = useCallback(async () => {
     if (!session) return;
     setLoading(true);
@@ -606,10 +727,10 @@ function usePendingAccounts(session) {
     try {
       // tc_init: single call returns accounts + dashboard + earnings
       const data = await Api.get({
-        action:  'tc_init',
-        city:    session.city,
+        action: 'tc_init',
+        city: session.city,
         staffId: session.staffId,
-        token:   session.token
+        token: session.token
       });
       // tc_init returns { dashboard, accounts, earnings }
       const accounts = data.accounts || data;
@@ -618,88 +739,113 @@ function usePendingAccounts(session) {
     } catch (e) {
       // Fallback: individual call if merged route fails (e.g. old backend)
       try {
-        const data = await Api.get({ action:'get_tc_accounts', city:session.city, staffId:session.staffId, token:session.token });
+        const data = await Api.get({
+          action: 'get_tc_accounts',
+          city: session.city,
+          staffId: session.staffId,
+          token: session.token
+        });
         setAccounts(Array.isArray(data) ? data : []);
-      } catch(e2) { setError(e2.message); setAccounts([]); }
+      } catch (e2) {
+        setError(e2.message);
+        setAccounts([]);
+      }
     } finally {
       setLoading(false);
     }
   }, [session]);
-
-  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => {
+    fetch();
+  }, [fetch]);
 
   // Derived stats
   const stats = useMemo(() => {
     const today = Utils.todayStr();
     return {
-      total:   accounts.length,
-      appt:    accounts.filter(a => a.status === 'APPT_FIXED').length,
-      called:  accounts.filter(a => {
+      total: accounts.length,
+      appt: accounts.filter(a => a.status === 'APPT_FIXED').length,
+      called: accounts.filter(a => {
         const ts = a.lastActionTime || a.last_action_time || '';
         return ts.startsWith(today);
       }).length,
-      pending: accounts.filter(a => !['COLLECTED','NR_OWN','NR_WRONG_NO','NR_ADDR','STRIKE_3'].includes(a.status)).length
+      pending: accounts.filter(a => !['COLLECTED', 'NR_OWN', 'NR_WRONG_NO', 'NR_ADDR', 'STRIKE_3'].includes(a.status)).length
     };
   }, [accounts]);
 
   // Hot list: aging (>48h) + overdue appointments — sorted by priority score desc
   const hotList = useMemo(() => {
     const today = Utils.todayStr();
-    return accounts
-      .filter(a => {
-        const terminal = ['COLLECTED','NR_OWN','NR_WRONG_NO','NR_ADDR','STRIKE_3'];
-        if (terminal.includes(a.status)) return false;
-        if (['COOLING','COOLING_POOL'].includes(a.status)) return false;
-        const ageHours = Utils.hoursAgo(a.pendingSince || a.pending_since);
-        const isAging  = ageHours >= CONFIG.AGING_HOURS;
-        const isOverdue= a.apptDate && a.apptDate < today && a.status === 'APPT_FIXED';
-        return isAging || isOverdue;
-      })
-      .map(a => {
-        const today = Utils.todayStr();
-        const ageH  = Utils.hoursAgo(a.pendingSince || a.pending_since);
-        const isOverdue = a.apptDate && a.apptDate < today && a.status === 'APPT_FIXED';
-        const isApptToday = a.apptDate === today;
-        return {
-          ...a,
-          _ageHours: ageH,
-          _urgency:  isOverdue ? 'overdue' : isApptToday ? 'appt' : 'aging'
-        };
-      })
-      .sort((a, b) => (b.priorityScore || b.priority_score || 0) - (a.priorityScore || a.priority_score || 0))
-      .slice(0, 10); // Cap at 10 on dashboard
+    return accounts.filter(a => {
+      const terminal = ['COLLECTED', 'NR_OWN', 'NR_WRONG_NO', 'NR_ADDR', 'STRIKE_3'];
+      if (terminal.includes(a.status)) return false;
+      if (['COOLING', 'COOLING_POOL'].includes(a.status)) return false;
+      const ageHours = Utils.hoursAgo(a.pendingSince || a.pending_since);
+      const isAging = ageHours >= CONFIG.AGING_HOURS;
+      const isOverdue = a.apptDate && a.apptDate < today && a.status === 'APPT_FIXED';
+      return isAging || isOverdue;
+    }).map(a => {
+      const today = Utils.todayStr();
+      const ageH = Utils.hoursAgo(a.pendingSince || a.pending_since);
+      const isOverdue = a.apptDate && a.apptDate < today && a.status === 'APPT_FIXED';
+      const isApptToday = a.apptDate === today;
+      return {
+        ...a,
+        _ageHours: ageH,
+        _urgency: isOverdue ? 'overdue' : isApptToday ? 'appt' : 'aging'
+      };
+    }).sort((a, b) => (b.priorityScore || b.priority_score || 0) - (a.priorityScore || a.priority_score || 0)).slice(0, 10); // Cap at 10 on dashboard
   }, [accounts]);
-
-  return { accounts, hotList, stats, loading, error, refresh: fetch, lastFetch };
+  return {
+    accounts,
+    hotList,
+    stats,
+    loading,
+    error,
+    refresh: fetch,
+    lastFetch
+  };
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  📁 hooks/useAuth.js
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function useAuth({ onSuccess, onError }) {
+function useAuth({
+  onSuccess,
+  onError
+}) {
   const [loading, setLoading] = useState(false);
   const login = useCallback(async (staffId, pin, city) => {
     setLoading(true);
     try {
       const data = await Api.get({
-        action: 'login', city: city || CONFIG.CITY_DEFAULT,
-        staffId: String(staffId).trim().toUpperCase(), pin: pin.trim()
+        action: 'login',
+        city: city || CONFIG.CITY_DEFAULT,
+        staffId: String(staffId).trim().toUpperCase(),
+        pin: pin.trim()
       });
       if (data.role !== CONFIG.ALLOWED_ROLE) throw new Error('This app is for Telecallers only');
       const session = {
-        token: data.token, staffId: data.staffId, staffName: data.staffName,
-        role: data.role, city: data.city, clientId: data.clientId, loginAt: Date.now()
+        token: data.token,
+        staffId: data.staffId,
+        staffName: data.staffName,
+        role: data.role,
+        city: data.city,
+        clientId: data.clientId,
+        loginAt: Date.now()
       };
       SessionStore.save(session);
       onSuccess(session);
     } catch (e) {
-      const msg = e.message.includes('Invalid') ? 'Invalid Staff ID or PIN'
-                : e.message.includes('attempts') ? 'Too many attempts. Wait 10 min.'
-                : e.message || 'Login failed';
+      const msg = e.message.includes('Invalid') ? 'Invalid Staff ID or PIN' : e.message.includes('attempts') ? 'Too many attempts. Wait 10 min.' : e.message || 'Login failed';
       onError(msg);
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   }, [onSuccess, onError]);
-  return { login, loading };
+  return {
+    login,
+    loading
+  };
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -707,9 +853,16 @@ function useAuth({ onSuccess, onError }) {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function useToast() {
   const [toast, setToast] = useState(null);
-  const show = useCallback((msg, type='error') => setToast({ msg, type }), []);
+  const show = useCallback((msg, type = 'error') => setToast({
+    msg,
+    type
+  }), []);
   const hide = useCallback(() => setToast(null), []);
-  return { toast, showToast: show, hideToast: hide };
+  return {
+    toast,
+    showToast: show,
+    hideToast: hide
+  };
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -721,9 +874,20 @@ function useTokenRefresh(session, onExpired) {
     if (!session) return;
     timerRef.current = setInterval(async () => {
       try {
-        const data = await Api.get({ action:'login', city:session.city, staffId:session.staffId, token:session.token });
-        SessionStore.save({ ...session, token: data.token, loginAt: Date.now() });
-      } catch { onExpired(); }
+        const data = await Api.get({
+          action: 'login',
+          city: session.city,
+          staffId: session.staffId,
+          token: session.token
+        });
+        SessionStore.save({
+          ...session,
+          token: data.token,
+          loginAt: Date.now()
+        });
+      } catch {
+        onExpired();
+      }
     }, CONFIG.REFRESH_MS);
     return () => clearInterval(timerRef.current);
   }, [session]);
@@ -732,516 +896,614 @@ function useTokenRefresh(session, onExpired) {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  📁 components/ui/Toast.jsx
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const Toast = ({ msg, type='error', onDone }) => {
-  useEffect(() => { const t = setTimeout(onDone, 3200); return () => clearTimeout(t); }, []);
-  return <div className="toast-wrap"><div className={`toast-inner ${type}`}>{msg}</div></div>;
+const Toast = ({
+  msg,
+  type = 'error',
+  onDone
+}) => {
+  useEffect(() => {
+    const t = setTimeout(onDone, 3200);
+    return () => clearTimeout(t);
+  }, []);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "toast-wrap"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: `toast-inner ${type}`
+  }, msg));
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  📁 components/ui/PinDots.jsx
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const PinDots = ({ length=0, total=4 }) => (
-  <div className="pin-dots">
-    {Array.from({ length:total }).map((_,i) => (
-      <div key={i} className={`pin-dot${length > i ? ' filled' : ''}`} />
-    ))}
-  </div>
-);
+const PinDots = ({
+  length = 0,
+  total = 4
+}) => /*#__PURE__*/React.createElement("div", {
+  className: "pin-dots"
+}, Array.from({
+  length: total
+}).map((_, i) => /*#__PURE__*/React.createElement("div", {
+  key: i,
+  className: `pin-dot${length > i ? ' filled' : ''}`
+})));
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  📁 components/ui/BrandLogo.jsx
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const BrandLogo = ({ size='lg' }) => {
+const BrandLogo = ({
+  size = 'lg'
+}) => {
   const lg = size === 'lg';
-  return (
-    <div style={{
-      width: lg?72:34, height: lg?72:34,
-      background:'linear-gradient(135deg,var(--accent),var(--accent-dk))',
-      borderRadius: lg?20:10,
-      display:'flex', alignItems:'center', justifyContent:'center',
-      fontFamily:'var(--fh)', fontWeight:800, fontSize: lg?22:11,
-      color:'#fff', letterSpacing:'.5px', flexShrink:0,
-      boxShadow: lg?'0 8px 28px rgba(249,115,22,.28)':'none'
-    }}>VOA</div>
-  );
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: lg ? 72 : 34,
+      height: lg ? 72 : 34,
+      background: 'linear-gradient(135deg,var(--accent),var(--accent-dk))',
+      borderRadius: lg ? 20 : 10,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily: 'var(--fh)',
+      fontWeight: 800,
+      fontSize: lg ? 22 : 11,
+      color: '#fff',
+      letterSpacing: '.5px',
+      flexShrink: 0,
+      boxShadow: lg ? '0 8px 28px rgba(249,115,22,.28)' : 'none'
+    }
+  }, "VOA");
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  📁 components/layout/AppHeader.jsx
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const AppHeader = ({ session, onLogout }) => (
-  <div className="header">
-    <div className="brand">
-      <BrandLogo size="sm" />
-      <span className="brand-name">CollectPro</span>
-      <span className="brand-role">TELECALLER</span>
-    </div>
-    <div className="hdr-right">
-      <span className="city-badge">{session.city}</span>
-      <span className="staff-badge">{Utils.firstName(session.staffName)}</span>
-      <button className="logout-btn" onClick={onLogout}>✕</button>
-    </div>
-  </div>
-);
+const AppHeader = ({
+  session,
+  onLogout
+}) => /*#__PURE__*/React.createElement("div", {
+  className: "header"
+}, /*#__PURE__*/React.createElement("div", {
+  className: "brand"
+}, /*#__PURE__*/React.createElement(BrandLogo, {
+  size: "sm"
+}), /*#__PURE__*/React.createElement("span", {
+  className: "brand-name"
+}, "CollectPro"), /*#__PURE__*/React.createElement("span", {
+  className: "brand-role"
+}, "TELECALLER")), /*#__PURE__*/React.createElement("div", {
+  className: "hdr-right"
+}, /*#__PURE__*/React.createElement("span", {
+  className: "city-badge"
+}, session.city), /*#__PURE__*/React.createElement("span", {
+  className: "staff-badge"
+}, Utils.firstName(session.staffName)), /*#__PURE__*/React.createElement("button", {
+  className: "logout-btn",
+  onClick: onLogout
+}, "\u2715")));
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  📁 components/layout/BottomNav.jsx
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const BottomNav = ({ active, onChange, hotCount=0 }) => (
-  <div className="bnav">
-    {NAV_ITEMS.map(n => (
-      <button key={n.id} className={`ni${active===n.id?' on':''}`} onClick={() => onChange(n.id)}>
-        <span className="ico">{n.icon}</span>
-        {n.label}
-        {n.id==='dash' && hotCount > 0 && (
-          <span className="nav-badge">{hotCount > 9 ? '9+' : hotCount}</span>
-        )}
-      </button>
-    ))}
-  </div>
-);
+const BottomNav = ({
+  active,
+  onChange,
+  hotCount = 0
+}) => /*#__PURE__*/React.createElement("div", {
+  className: "bnav"
+}, NAV_ITEMS.map(n => /*#__PURE__*/React.createElement("button", {
+  key: n.id,
+  className: `ni${active === n.id ? ' on' : ''}`,
+  onClick: () => onChange(n.id)
+}, /*#__PURE__*/React.createElement("span", {
+  className: "ico"
+}, n.icon), n.label, n.id === 'dash' && hotCount > 0 && /*#__PURE__*/React.createElement("span", {
+  className: "nav-badge"
+}, hotCount > 9 ? '9+' : hotCount))));
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  📁 components/dashboard/SharedResponsibility.jsx
 //  Shows assigned exec + call/WA exec + share WA message
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const SharedResponsibility = ({ account, tcName, showToast }) => {
-  const execId   = account.execId   || account.exec_id   || '';
+const SharedResponsibility = ({
+  account,
+  tcName,
+  showToast
+}) => {
+  const execId = account.execId || account.exec_id || '';
   const execName = account.execName || account.exec_name || '';
 
   // Build pre-filled WhatsApp message for sharing responsibility
   const buildShareMessage = () => {
-    const accNo  = account.accountNo  || account.account_no  || '';
-    const name   = account.name       || '';
-    const mobile = account.mobile     || '';
-    const area   = account.area       || '';
-    const appt   = account.apptDate   || account.appt_date   || '';
-    const remark = account.tcRemark   || account.tc_remark   || '';
-    const ageH   = account._ageHours  || 0;
-
-    return `🔔 *CollectPro — Pending Alert*\n\n` +
-      `Hi ${execName || 'Exec'}, please follow up on this account:\n\n` +
-      `📋 *Account:* ${accNo}\n` +
-      `👤 *Customer:* ${name}\n` +
-      `📞 *Mobile:* ${mobile}\n` +
-      `📍 *Area:* ${area}\n` +
-      (appt ? `📅 *Appointment:* ${appt}\n` : '') +
-      (remark ? `💬 *Remark:* ${remark}\n` : '') +
-      `⏱ *Pending since:* ${Utils.formatHours(ageH)}\n\n` +
-      `Please confirm visit or call me. — ${tcName} (TC)`;
+    const accNo = account.accountNo || account.account_no || '';
+    const name = account.name || '';
+    const mobile = account.mobile || '';
+    const area = account.area || '';
+    const appt = account.apptDate || account.appt_date || '';
+    const remark = account.tcRemark || account.tc_remark || '';
+    const ageH = account._ageHours || 0;
+    return `🔔 *CollectPro — Pending Alert*\n\n` + `Hi ${execName || 'Exec'}, please follow up on this account:\n\n` + `📋 *Account:* ${accNo}\n` + `👤 *Customer:* ${name}\n` + `📞 *Mobile:* ${mobile}\n` + `📍 *Area:* ${area}\n` + (appt ? `📅 *Appointment:* ${appt}\n` : '') + (remark ? `💬 *Remark:* ${remark}\n` : '') + `⏱ *Pending since:* ${Utils.formatHours(ageH)}\n\n` + `Please confirm visit or call me. — ${tcName} (TC)`;
   };
-
   const handleShareWA = () => {
     // Need exec's mobile — use execId as fallback label if no mobile
     // In Phase 5, exec mobile will be fetched from staff list
-    const msg  = buildShareMessage();
+    const msg = buildShareMessage();
     // For now open WA without pre-filled number (exec mobile not in account data)
     // Phase 5: fetch exec mobile from getStaffList and pre-fill number
     const link = `https://wa.me/?text=${encodeURIComponent(msg)}`;
     window.open(link, '_blank');
     showToast('Opening WhatsApp to share with exec', 'success');
   };
-
   if (!execId) {
-    return (
-      <div className="no-exec-strip">
-        ⚠️ No executive assigned yet — contact Admin
-      </div>
-    );
+    return /*#__PURE__*/React.createElement("div", {
+      className: "no-exec-strip"
+    }, "\u26A0\uFE0F No executive assigned yet \u2014 contact Admin");
   }
-
-  return (
-    <div>
-      {/* Exec info strip */}
-      <div className="exec-strip">
-        <div className="exec-strip-label">
-          <span>👷</span> Assigned Executive
-        </div>
-        <div className="exec-strip-body">
-          <div className="exec-info">
-            <div className="exec-avatar">
-              {Utils.initials(execName || execId)}
-            </div>
-            <div>
-              <div className="exec-name">{execName || execId}</div>
-              <div className="exec-id">{execId}</div>
-            </div>
-          </div>
-          <div className="exec-action-btns">
-            <button
-              className="exec-btn call"
-              onClick={() => showToast('Exec mobile available in Phase 5', 'warning')}
-              title="Call Executive"
-            >
-              📞 Call
-            </button>
-            <button
-              className="exec-btn wa"
-              onClick={handleShareWA}
-              title="WhatsApp Executive"
-            >
-              💬 WA
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Share responsibility button */}
-      <button className="share-btn" onClick={handleShareWA}>
-        <span>🔗</span>
-        Share responsibility with {execName || execId}
-      </button>
-    </div>
-  );
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "exec-strip"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "exec-strip-label"
+  }, /*#__PURE__*/React.createElement("span", null, "\uD83D\uDC77"), " Assigned Executive"), /*#__PURE__*/React.createElement("div", {
+    className: "exec-strip-body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "exec-info"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "exec-avatar"
+  }, Utils.initials(execName || execId)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "exec-name"
+  }, execName || execId), /*#__PURE__*/React.createElement("div", {
+    className: "exec-id"
+  }, execId))), /*#__PURE__*/React.createElement("div", {
+    className: "exec-action-btns"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "exec-btn call",
+    onClick: () => showToast('Exec mobile available in Phase 5', 'warning'),
+    title: "Call Executive"
+  }, "\uD83D\uDCDE Call"), /*#__PURE__*/React.createElement("button", {
+    className: "exec-btn wa",
+    onClick: handleShareWA,
+    title: "WhatsApp Executive"
+  }, "\uD83D\uDCAC WA")))), /*#__PURE__*/React.createElement("button", {
+    className: "share-btn",
+    onClick: handleShareWA
+  }, /*#__PURE__*/React.createElement("span", null, "\uD83D\uDD17"), "Share responsibility with ", execName || execId));
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  📁 components/dashboard/PendingCard.jsx
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const PendingCard = ({ account, tcName, showToast }) => {
+const PendingCard = ({
+  account,
+  tcName,
+  showToast
+}) => {
   const [expanded, setExpanded] = useState(false);
-
-  const accNo    = account.accountNo  || account.account_no  || '';
-  const name     = account.name       || '';
-  const mobile   = account.mobile     || '';
-  const address  = account.address    || '';
-  const area     = account.area       || '';
-  const apptDate = account.apptDate   || account.appt_date   || '';
-  const remark   = account.tcRemark   || account.tc_remark   || '';
-  const status   = account.status     || '';
-  const score    = account.priorityScore || account.priority_score || 0;
-  const ageH     = account._ageHours  || 0;
-  const urgency  = account._urgency   || 'aging';
-
+  const accNo = account.accountNo || account.account_no || '';
+  const name = account.name || '';
+  const mobile = account.mobile || '';
+  const address = account.address || '';
+  const area = account.area || '';
+  const apptDate = account.apptDate || account.appt_date || '';
+  const remark = account.tcRemark || account.tc_remark || '';
+  const status = account.status || '';
+  const score = account.priorityScore || account.priority_score || 0;
+  const ageH = account._ageHours || 0;
+  const urgency = account._urgency || 'aging';
   const urgencyLabel = {
     overdue: '🔴 OVERDUE APPT',
-    appt:    '🟢 APPT TODAY',
-    aging:   `⏱ ${Utils.formatHours(ageH)} IDLE`
+    appt: '🟢 APPT TODAY',
+    aging: `⏱ ${Utils.formatHours(ageH)} IDLE`
   }[urgency];
-
   const handleCall = () => {
     window.location.href = Utils.buildCallLink(mobile);
   };
-
   const handleWA = () => {
-    const msg = `Hi, this is ${tcName} calling regarding your ACT router return. ` +
-      `Account: ${accNo}. Please contact us to arrange collection. Thank you.`;
+    const msg = `Hi, this is ${tcName} calling regarding your ACT router return. ` + `Account: ${accNo}. Please contact us to arrange collection. Thank you.`;
     window.open(Utils.buildWALink(mobile, msg), '_blank');
   };
-
-  return (
-    <div className={`pending-card ${urgency}`}>
-      {/* Urgency strip */}
-      <div className="urgency-strip">
-        <span className={`urgency-badge ${urgency}`}>{urgencyLabel}</span>
-        <span className="priority-score">Score <span>{score}</span></span>
-      </div>
-
-      {/* Account info */}
-      <div className="pc-accno">{accNo}</div>
-      <div className="pc-name">{name}</div>
-      <div className="pc-phone">{mobile}</div>
-
-      {/* Chips */}
-      <div className="pc-meta">
-        <span className={`pc-chip status`}>{STATUS_LABELS[status] || status}</span>
-        <span className={`pc-chip age`}>{Utils.formatHours(ageH)}</span>
-        {apptDate && <span className="pc-chip appt-chip">📅 {apptDate}</span>}
-        <span className="pc-chip">{area}</span>
-      </div>
-
-      {/* Address (collapsed) */}
-      {expanded && (
-        <>
-          <div className="pc-addr">{address}</div>
-          {remark && <div className="pc-remark">💬 {remark}</div>}
-        </>
-      )}
-
-      {/* Expand toggle */}
-      <div
-        onClick={() => setExpanded(e => !e)}
-        style={{ fontSize:11, color:'var(--accent)', fontFamily:'var(--fm)',
-          cursor:'pointer', marginBottom:10, userSelect:'none' }}
-      >
-        {expanded ? '▲ Less' : '▼ More details'}
-      </div>
-
-      {/* Shared Responsibility */}
-      <SharedResponsibility account={account} tcName={tcName} showToast={showToast} />
-
-      {/* TC Action buttons */}
-      <div className="pc-actions">
-        <button className="pc-btn call" onClick={handleCall}>📞 Call</button>
-        <button className="pc-btn wa"   onClick={handleWA  }>💬 WA</button>
-        <button className="pc-btn log"
-          onClick={() => showToast('Use Accounts tab to log calls', 'warning')}>
-          ✏️ Log
-        </button>
-      </div>
-    </div>
-  );
+  return /*#__PURE__*/React.createElement("div", {
+    className: `pending-card ${urgency}`
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "urgency-strip"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: `urgency-badge ${urgency}`
+  }, urgencyLabel), /*#__PURE__*/React.createElement("span", {
+    className: "priority-score"
+  }, "Score ", /*#__PURE__*/React.createElement("span", null, score))), /*#__PURE__*/React.createElement("div", {
+    className: "pc-accno"
+  }, accNo), /*#__PURE__*/React.createElement("div", {
+    className: "pc-name"
+  }, name), /*#__PURE__*/React.createElement("div", {
+    className: "pc-phone"
+  }, mobile), /*#__PURE__*/React.createElement("div", {
+    className: "pc-meta"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: `pc-chip status`
+  }, STATUS_LABELS[status] || status), /*#__PURE__*/React.createElement("span", {
+    className: `pc-chip age`
+  }, Utils.formatHours(ageH)), apptDate && /*#__PURE__*/React.createElement("span", {
+    className: "pc-chip appt-chip"
+  }, "\uD83D\uDCC5 ", apptDate), /*#__PURE__*/React.createElement("span", {
+    className: "pc-chip"
+  }, area)), expanded && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "pc-addr"
+  }, address), remark && /*#__PURE__*/React.createElement("div", {
+    className: "pc-remark"
+  }, "\uD83D\uDCAC ", remark)), /*#__PURE__*/React.createElement("div", {
+    onClick: () => setExpanded(e => !e),
+    style: {
+      fontSize: 11,
+      color: 'var(--accent)',
+      fontFamily: 'var(--fm)',
+      cursor: 'pointer',
+      marginBottom: 10,
+      userSelect: 'none'
+    }
+  }, expanded ? '▲ Less' : '▼ More details'), /*#__PURE__*/React.createElement(SharedResponsibility, {
+    account: account,
+    tcName: tcName,
+    showToast: showToast
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "pc-actions"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "pc-btn call",
+    onClick: handleCall
+  }, "\uD83D\uDCDE Call"), /*#__PURE__*/React.createElement("button", {
+    className: "pc-btn wa",
+    onClick: handleWA
+  }, "\uD83D\uDCAC WA"), /*#__PURE__*/React.createElement("button", {
+    className: "pc-btn log",
+    onClick: () => showToast('Use Accounts tab to log calls', 'warning')
+  }, "\u270F\uFE0F Log")));
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  📁 components/dashboard/PendingHotList.jsx
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const PendingHotList = ({ hotList, loading, tcName, showToast, onRefresh }) => {
+const PendingHotList = ({
+  hotList,
+  loading,
+  tcName,
+  showToast,
+  onRefresh
+}) => {
   if (loading) {
-    return (
-      <div className="hot-list-section">
-        <div className="hot-list-header">
-          <div className="hot-list-title">
-            🔥 Pending Hot List
-            <div style={{ width:60, height:20 }} className="skeleton" />
-          </div>
-        </div>
-        {[1,2].map(i => (
-          <div key={i} style={{ height:120, borderRadius:'var(--r)', marginBottom:10 }} className="skeleton" />
-        ))}
-      </div>
-    );
+    return /*#__PURE__*/React.createElement("div", {
+      className: "hot-list-section"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "hot-list-header"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "hot-list-title"
+    }, "\uD83D\uDD25 Pending Hot List", /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: 60,
+        height: 20
+      },
+      className: "skeleton"
+    }))), [1, 2].map(i => /*#__PURE__*/React.createElement("div", {
+      key: i,
+      style: {
+        height: 120,
+        borderRadius: 'var(--r)',
+        marginBottom: 10
+      },
+      className: "skeleton"
+    })));
   }
-
-  return (
-    <div className="hot-list-section">
-      <div className="hot-list-header">
-        <div className="hot-list-title">
-          🔥 Pending Hot List
-          {hotList.length > 0 && (
-            <span className="hot-badge">{hotList.length} urgent</span>
-          )}
-        </div>
-        <button
-          onClick={onRefresh}
-          style={{ background:'none', border:'none', cursor:'pointer',
-            fontSize:13, color:'var(--accent)', fontFamily:'var(--fm)' }}
-        >
-          ↻ Refresh
-        </button>
-      </div>
-
-      {hotList.length === 0 ? (
-        <div className="hot-empty">
-          <div className="hot-empty-icon">✅</div>
-          <div className="hot-empty-text">No urgent pending accounts</div>
-          <div className="hot-empty-sub">All accounts are within normal follow-up time</div>
-        </div>
-      ) : (
-        <>
-          <div style={{ fontSize:11, color:'var(--text3)', fontFamily:'var(--fm)', marginBottom:10 }}>
-            Accounts idle &gt; 48h or with overdue appointments — sorted by priority
-          </div>
-          {hotList.map((account, i) => (
-            <PendingCard
-              key={account.accountNo || account.account_no || i}
-              account={account}
-              tcName={tcName}
-              showToast={showToast}
-            />
-          ))}
-          {hotList.length >= 10 && (
-            <div style={{ textAlign:'center', fontSize:12, color:'var(--text3)',
-              fontFamily:'var(--fm)', padding:'8px 0' }}>
-              Showing top 10 · See all in Accounts tab
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  );
+  return /*#__PURE__*/React.createElement("div", {
+    className: "hot-list-section"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "hot-list-header"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "hot-list-title"
+  }, "\uD83D\uDD25 Pending Hot List", hotList.length > 0 && /*#__PURE__*/React.createElement("span", {
+    className: "hot-badge"
+  }, hotList.length, " urgent")), /*#__PURE__*/React.createElement("button", {
+    onClick: onRefresh,
+    style: {
+      background: 'none',
+      border: 'none',
+      cursor: 'pointer',
+      fontSize: 13,
+      color: 'var(--accent)',
+      fontFamily: 'var(--fm)'
+    }
+  }, "\u21BB Refresh")), hotList.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    className: "hot-empty"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "hot-empty-icon"
+  }, "\u2705"), /*#__PURE__*/React.createElement("div", {
+    className: "hot-empty-text"
+  }, "No urgent pending accounts"), /*#__PURE__*/React.createElement("div", {
+    className: "hot-empty-sub"
+  }, "All accounts are within normal follow-up time")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--text3)',
+      fontFamily: 'var(--fm)',
+      marginBottom: 10
+    }
+  }, "Accounts idle > 48h or with overdue appointments \u2014 sorted by priority"), hotList.map((account, i) => /*#__PURE__*/React.createElement(PendingCard, {
+    key: account.accountNo || account.account_no || i,
+    account: account,
+    tcName: tcName,
+    showToast: showToast
+  })), hotList.length >= 10 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: 'center',
+      fontSize: 12,
+      color: 'var(--text3)',
+      fontFamily: 'var(--fm)',
+      padding: '8px 0'
+    }
+  }, "Showing top 10 \xB7 See all in Accounts tab")));
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  📁 app/dashboard/page.jsx
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const DashboardPage = ({ session, showToast }) => {
-  const { stats, hotList, loading, refresh } = usePendingAccounts(session);
-
-  return (
-    <div className="dash-wrap">
-      {/* Greeting */}
-      <div className="dash-greeting">
-        {Utils.getGreeting()}, {Utils.firstName(session.staffName)} 👋
-      </div>
-      <div className="dash-date">{Utils.getDateStr()}</div>
-
-      {/* Stat cards */}
-      <div className="dash-cards">
-        {STAT_CARDS.map(c => (
-          <div key={c.id} className={`dash-card ${c.cls}`}>
-            <div className="dash-card-icon">{c.icon}</div>
-            <div className="dash-card-val">
-              {loading
-                ? <div style={{width:40,height:32}} className="skeleton" />
-                : (stats[c.id] ?? '—')
-              }
-            </div>
-            <div className="dash-card-lbl">{c.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* 🔥 PENDING HOT LIST */}
-      <PendingHotList
-        hotList={hotList}
-        loading={loading}
-        tcName={session.staffName}
-        showToast={showToast}
-        onRefresh={refresh}
-      />
-    </div>
-  );
+const DashboardPage = ({
+  session,
+  showToast
+}) => {
+  const {
+    stats,
+    hotList,
+    loading,
+    refresh
+  } = usePendingAccounts(session);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "dash-wrap"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "dash-greeting"
+  }, Utils.getGreeting(), ", ", Utils.firstName(session.staffName), " \uD83D\uDC4B"), /*#__PURE__*/React.createElement("div", {
+    className: "dash-date"
+  }, Utils.getDateStr()), /*#__PURE__*/React.createElement("div", {
+    className: "dash-cards"
+  }, STAT_CARDS.map(c => /*#__PURE__*/React.createElement("div", {
+    key: c.id,
+    className: `dash-card ${c.cls}`
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "dash-card-icon"
+  }, c.icon), /*#__PURE__*/React.createElement("div", {
+    className: "dash-card-val"
+  }, loading ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 40,
+      height: 32
+    },
+    className: "skeleton"
+  }) : stats[c.id] ?? '—'), /*#__PURE__*/React.createElement("div", {
+    className: "dash-card-lbl"
+  }, c.label)))), /*#__PURE__*/React.createElement(PendingHotList, {
+    hotList: hotList,
+    loading: loading,
+    tcName: session.staffName,
+    showToast: showToast,
+    onRefresh: refresh
+  }));
 };
-
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  LOG CALL SHEET
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const LogCallSheet = ({ account, session, onClose, onSuccess, showToast }) => {
-  const [outcome,  setOutcome]  = useState('');
-  const [remark,   setRemark]   = useState('');
+const LogCallSheet = ({
+  account,
+  session,
+  onClose,
+  onSuccess,
+  showToast
+}) => {
+  const [outcome, setOutcome] = useState('');
+  const [remark, setRemark] = useState('');
   const [apptDate, setApptDate] = useState(tomorrowStr());
-  const [loading,  setLoading]  = useState(false);
-
+  const [loading, setLoading] = useState(false);
   const selOut = ALL_OUTCOMES.find(o => o.value === outcome);
   const needsDate = selOut?.needsDate;
-
-  const getSelClass = (group) => {
-    const m = {Connected:'sel-green',Rescheduled:'sel-amber','Not Reachable':'sel-red',Issues:'sel-purple','Non Recoverable':'sel-red'};
+  const getSelClass = group => {
+    const m = {
+      Connected: 'sel-green',
+      Rescheduled: 'sel-amber',
+      'Not Reachable': 'sel-red',
+      Issues: 'sel-purple',
+      'Non Recoverable': 'sel-red'
+    };
     return m[group] || 'sel-orange';
   };
-
   const handleSubmit = async () => {
-    if (!outcome) { showToast('Select an outcome','error'); return; }
-    if (needsDate && !apptDate) { showToast('Select appointment date','error'); return; }
+    if (!outcome) {
+      showToast('Select an outcome', 'error');
+      return;
+    }
+    if (needsDate && !apptDate) {
+      showToast('Select appointment date', 'error');
+      return;
+    }
     setLoading(true);
+    // OPTIMISTIC UI: remove account from list immediately (instant feel)
+    window._cpOptimisticRemove && window._cpOptimisticRemove(account.accountNo);
     try {
       // log_call_and_refresh: logs + returns fresh queue in 1 call
       const result = await Api.post({
-        action:'log_call_and_refresh', token:session.token,
-        city:session.city, staffId:session.staffId,
-        accountNo:account.accountNo, outcome,
-        tcRemark:remark, apptDate:needsDate?apptDate:''
+        action: 'log_call_and_refresh',
+        token: session.token,
+        city: session.city,
+        staffId: session.staffId,
+        accountNo: account.accountNo,
+        outcome,
+        tcRemark: remark,
+        apptDate: needsDate ? apptDate : ''
       });
-      // Pass fresh accounts back to parent to avoid extra refresh call
+      // Reconcile: replace optimistic state with server truth
       onSuccess(account.name + ' → ' + outcome, result?.accounts);
       onClose();
-    } catch(e) { showToast(e.message,'error'); }
-    finally { setLoading(false); }
+    } catch (e) {
+      // ROLLBACK: restore account if API failed
+      window._cpOptimisticRestore && window._cpOptimisticRestore(account.accountNo);
+      showToast(e.message, 'error');
+    } finally {
+      setLoading(false);
+    }
   };
-
-  return (
-    <div className="overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div className="sheet">
-        <div className="sheet-handle"/>
-        <div className="sheet-title">Log Call Outcome</div>
-        <div className="sheet-sub">Record the result of your call</div>
-        <div className="sheet-cust">
-          <div className="sheet-cust-name">{account.name}</div>
-          <div className="sheet-cust-acc">📞 {account.mobile} · {account.accountNo}</div>
-        </div>
-        {OUTCOME_GROUPS.map(g => (
-          <div key={g.title} style={{marginBottom:12}}>
-            <div className="og-title">{g.title}</div>
-            <div className="og-grid">
-              {g.items.map(item => (
-                <button key={item.value}
-                  className={`ob${outcome===item.value?' '+getSelClass(g.title):''}`}
-                  onClick={()=>setOutcome(item.value)}>
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        ))}
-        {needsDate && (
-          <>
-            <div className="sl-label" style={{marginBottom:7}}>Appointment Date</div>
-            <input type="date" className="date-inp" value={apptDate}
-              min={todayStr()} onChange={e=>setApptDate(e.target.value)}/>
-          </>
-        )}
-        <div className="sl-label" style={{marginBottom:7}}>Remark (optional)</div>
-        <textarea className="remark-ta" value={remark}
-          onChange={e=>setRemark(e.target.value)}
-          placeholder="Add notes about this call…" rows={3}/>
-        <button className="submit-btn" onClick={handleSubmit}
-          disabled={!outcome||loading}>
-          {loading?'Saving…':'✅ Submit Outcome'}
-        </button>
-        <div className="cancel-lnk" onClick={onClose}>Cancel</div>
-      </div>
-    </div>
-  );
+  return /*#__PURE__*/React.createElement("div", {
+    className: "overlay",
+    onClick: e => e.target === e.currentTarget && onClose()
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "sheet"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "sheet-handle"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "sheet-title"
+  }, "Log Call Outcome"), /*#__PURE__*/React.createElement("div", {
+    className: "sheet-sub"
+  }, "Record the result of your call"), /*#__PURE__*/React.createElement("div", {
+    className: "sheet-cust"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "sheet-cust-name"
+  }, account.name), /*#__PURE__*/React.createElement("div", {
+    className: "sheet-cust-acc"
+  }, "\uD83D\uDCDE ", account.mobile, " \xB7 ", account.accountNo)), OUTCOME_GROUPS.map(g => /*#__PURE__*/React.createElement("div", {
+    key: g.title,
+    style: {
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "og-title"
+  }, g.title), /*#__PURE__*/React.createElement("div", {
+    className: "og-grid"
+  }, g.items.map(item => /*#__PURE__*/React.createElement("button", {
+    key: item.value,
+    className: `ob${outcome === item.value ? ' ' + getSelClass(g.title) : ''}`,
+    onClick: () => setOutcome(item.value)
+  }, item.label))))), needsDate && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "sl-label",
+    style: {
+      marginBottom: 7
+    }
+  }, "Appointment Date"), /*#__PURE__*/React.createElement("input", {
+    type: "date",
+    className: "date-inp",
+    value: apptDate,
+    min: todayStr(),
+    onChange: e => setApptDate(e.target.value)
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "sl-label",
+    style: {
+      marginBottom: 7
+    }
+  }, "Remark (optional)"), /*#__PURE__*/React.createElement("textarea", {
+    className: "remark-ta",
+    value: remark,
+    onChange: e => setRemark(e.target.value),
+    placeholder: "Add notes about this call\u2026",
+    rows: 3
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "submit-btn",
+    onClick: handleSubmit,
+    disabled: !outcome || loading
+  }, loading ? 'Saving…' : '✅ Submit Outcome'), /*#__PURE__*/React.createElement("div", {
+    className: "cancel-lnk",
+    onClick: onClose
+  }, "Cancel")));
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  ACCOUNT CARD
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const FILTERS_LIST = [
-  {label:'All',value:null},{label:'Fresh',value:'FRESH'},
-  {label:'Called',value:'CALLED'},{label:'Appt Fixed',value:'APPT_FIXED'},
-  {label:'Rescheduled',value:'RESCHEDULED'},{label:'Not Reached',value:'NOT_REACHABLE'},
-];
-
-const AccountCard = ({ account, onLog }) => {
-  const [expanded,setExpanded] = useState(false);
-  const p = account.smartQueuePriority||account.smart_queue_priority||6;
-
-  const call = () => { window.location.href='tel:'+account.mobile.replace(/\D/g,''); };
-  const wa   = () => {
-    const msg = encodeURIComponent(`Hi, I'm calling from VOA regarding your ACT Fiber router. Account: ${account.accountNo}. Please call back or respond. Thank you.`);
-    window.open(`https://wa.me/91${account.mobile.replace(/\D/g,'')}?text=${msg}`,'_blank');
+const FILTERS_LIST = [{
+  label: 'All',
+  value: null
+}, {
+  label: 'Fresh',
+  value: 'FRESH'
+}, {
+  label: 'Called',
+  value: 'CALLED'
+}, {
+  label: 'Appt Fixed',
+  value: 'APPT_FIXED'
+}, {
+  label: 'Rescheduled',
+  value: 'RESCHEDULED'
+}, {
+  label: 'Not Reached',
+  value: 'NOT_REACHABLE'
+}];
+const AccountCard = ({
+  account,
+  onLog
+}) => {
+  const [expanded, setExpanded] = useState(false);
+  const p = account.smartQueuePriority || account.smart_queue_priority || 6;
+  const call = () => {
+    window.location.href = 'tel:' + account.mobile.replace(/\D/g, '');
   };
-
-  return (
-    <div className={`account-card ${getCardPriClass(p)}`} onClick={()=>setExpanded(e=>!e)}>
-      <div className="ac-top">
-        <div>
-          <div className="ac-name">{account.name}</div>
-          <div className="ac-no">{account.accountNo}</div>
-        </div>
-        <span className={`ac-badge ${getStatusBadgeClass(account.status)}`}>
-          {STATUS_LABELS[account.status]||account.status}
-        </span>
-      </div>
-      <div>
-        <div className="ac-row"><span>📞</span><span>{account.mobile}</span></div>
-        {expanded && (
-          <>
-            <div className="ac-row"><span>📍</span><span>{account.address}, {account.area}</span></div>
-            {account.srNumber&&<div className="ac-row"><span>🎫</span><span>SR: {account.srNumber}</span></div>}
-            {account.tcRemark&&<div className="ac-row" style={{color:'var(--text3)'}}><span>💬</span><span>{account.tcRemark}</span></div>}
-          </>
-        )}
-      </div>
-      {account.apptDate&&<div className="ac-appt">📅 Appointment: <strong>{account.apptDate}</strong></div>}
-      {account.strikeCount>0&&(
-        <div className="ac-strikes">
-          {[1,2,3].map(i=><div key={i} className={`sd ${i<=account.strikeCount?'on':'off'}`}/>)}
-          <span style={{fontSize:11,color:'var(--red)',marginLeft:4,fontWeight:600}}>{account.strikeCount} strike{account.strikeCount>1?'s':''}</span>
-        </div>
-      )}
-      <div className="ac-actions" onClick={e=>e.stopPropagation()}>
-        <button className="ac-btn call" onClick={call}>📞 Call</button>
-        <button className="ac-btn wa"   onClick={wa  }>💬 WA</button>
-        <button className="ac-btn log"  onClick={()=>onLog(account)}>✏️ Log</button>
-      </div>
-    </div>
-  );
+  const wa = () => {
+    const msg = encodeURIComponent(`Hi, I'm calling from VOA regarding your ACT Fiber router. Account: ${account.accountNo}. Please call back or respond. Thank you.`);
+    window.open(`https://wa.me/91${account.mobile.replace(/\D/g, '')}?text=${msg}`, '_blank');
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    className: `account-card ${getCardPriClass(p)}`,
+    onClick: () => setExpanded(e => !e)
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ac-top"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "ac-name"
+  }, account.name), /*#__PURE__*/React.createElement("div", {
+    className: "ac-no"
+  }, account.accountNo)), /*#__PURE__*/React.createElement("span", {
+    className: `ac-badge ${getStatusBadgeClass(account.status)}`
+  }, STATUS_LABELS[account.status] || account.status)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "ac-row"
+  }, /*#__PURE__*/React.createElement("span", null, "\uD83D\uDCDE"), /*#__PURE__*/React.createElement("span", null, account.mobile)), expanded && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "ac-row"
+  }, /*#__PURE__*/React.createElement("span", null, "\uD83D\uDCCD"), /*#__PURE__*/React.createElement("span", null, account.address, ", ", account.area)), account.srNumber && /*#__PURE__*/React.createElement("div", {
+    className: "ac-row"
+  }, /*#__PURE__*/React.createElement("span", null, "\uD83C\uDFAB"), /*#__PURE__*/React.createElement("span", null, "SR: ", account.srNumber)), account.tcRemark && /*#__PURE__*/React.createElement("div", {
+    className: "ac-row",
+    style: {
+      color: 'var(--text3)'
+    }
+  }, /*#__PURE__*/React.createElement("span", null, "\uD83D\uDCAC"), /*#__PURE__*/React.createElement("span", null, account.tcRemark)))), account.apptDate && /*#__PURE__*/React.createElement("div", {
+    className: "ac-appt"
+  }, "\uD83D\uDCC5 Appointment: ", /*#__PURE__*/React.createElement("strong", null, account.apptDate)), account.strikeCount > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "ac-strikes"
+  }, [1, 2, 3].map(i => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    className: `sd ${i <= account.strikeCount ? 'on' : 'off'}`
+  })), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 11,
+      color: 'var(--red)',
+      marginLeft: 4,
+      fontWeight: 600
+    }
+  }, account.strikeCount, " strike", account.strikeCount > 1 ? 's' : '')), /*#__PURE__*/React.createElement("div", {
+    className: "ac-actions",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "ac-btn call",
+    onClick: call
+  }, "\uD83D\uDCDE Call"), /*#__PURE__*/React.createElement("button", {
+    className: "ac-btn wa",
+    onClick: wa
+  }, "\uD83D\uDCAC WA"), /*#__PURE__*/React.createElement("button", {
+    className: "ac-btn log",
+    onClick: () => onLog(account)
+  }, "\u270F\uFE0F Log")));
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  ACCOUNTS PAGE
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const AccountsPage = ({ session, showToast }) => {
-  const [accounts,setAccounts] = useState([]);
-  const [loading, setLoading]  = useState(true);
-  const [filter,  setFilter]   = useState(null);
-  const [logTarget,setLogTarget]= useState(null);
-
-  const load = useCallback(async (prefetchedAccounts) => {
+const AccountsPage = ({
+  session,
+  showToast
+}) => {
+  const [accounts, setAccounts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState(null);
+  const [logTarget, setLogTarget] = useState(null);
+  const load = useCallback(async prefetchedAccounts => {
     // If tc_init already loaded accounts, use them directly (no extra call)
     if (prefetchedAccounts && Array.isArray(prefetchedAccounts)) {
       setAccounts(prefetchedAccounts);
@@ -1250,329 +1512,654 @@ const AccountsPage = ({ session, showToast }) => {
     }
     setLoading(true);
     try {
-      const d = await Api.get({action:'get_tc_accounts',token:session.token,staffId:session.staffId,city:session.city});
-      setAccounts(Array.isArray(d)?d:[]);
-    } catch(e) { showToast(e.message,'error'); }
-    finally { setLoading(false); }
-  },[session]);
+      const d = await Api.get({
+        action: 'get_tc_accounts',
+        token: session.token,
+        staffId: session.staffId,
+        city: session.city
+      });
+      setAccounts(Array.isArray(d) ? d : []);
+    } catch (e) {
+      showToast(e.message, 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [session]);
+  const [optimisticRemoved, setOptimisticRemoved] = useState([]);
 
-  useEffect(()=>{load();},[load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
-  const filtered = useMemo(()=>filter?accounts.filter(a=>a.status===filter):accounts,[accounts,filter]);
+  // Listen for optimistic remove/restore events
+  useEffect(() => {
+    const onRemove = (e) => {
+      setOptimisticRemoved(prev => [...prev, e.detail.accountNo]);
+    };
+    const onRestore = (e) => {
+      setOptimisticRemoved(prev => prev.filter(no => no !== e.detail.accountNo));
+    };
+    window.addEventListener('cp:optimistic_remove', onRemove);
+    window.addEventListener('cp:optimistic_restore', onRestore);
+    return () => {
+      window.removeEventListener('cp:optimistic_remove', onRemove);
+      window.removeEventListener('cp:optimistic_restore', onRestore);
+    };
+  }, []);
 
-  return (
-    <div>
-      <div className="list-header">
-        <div className="list-header-top">
-          <div className="list-title">My Accounts <span style={{color:'var(--text3)',fontSize:13}}>({filtered.length})</span></div>
-          <button className="refresh-btn" onClick={load}>↻ Refresh</button>
-        </div>
-        <div className="filter-chips">
-          {FILTERS_LIST.map(f=>(
-            <button key={f.label} className={`chip-btn${filter===f.value?' active':''}`}
-              onClick={()=>setFilter(f.value)}>{f.label}</button>
-          ))}
-        </div>
-      </div>
-      <div style={{paddingTop:10}}>
-        {loading?[1,2,3].map(i=><div key={i} style={{height:100,margin:'0 14px 10px',borderRadius:'var(--r)'}} className="skeleton"/>):
-         filtered.length===0?<div className="coming-soon">
-           <div className="coming-soon-icon">📭</div>
-           <div className="coming-soon-title">{filter?'No accounts with this status':'No accounts assigned'}</div>
-           <div className="coming-soon-sub">{filter?'Try a different filter':'Accounts appear here after admin uploads and allocates the base.'}</div>
-         </div>:
-         filtered.map(a=><AccountCard key={a.accountNo} account={a} onLog={setLogTarget}/>)
-        }
-      </div>
-      {logTarget&&<LogCallSheet account={logTarget} session={session} onClose={()=>setLogTarget(null)}
-        onSuccess={(msg, freshAccounts)=>{showToast(msg,'success');freshAccounts?setAccounts(freshAccounts):load();}} showToast={showToast}/>}
-    </div>
-  );
+  const filtered = useMemo(() => {
+    const base = filter ? accounts.filter(a => a.status === filter) : accounts;
+    return base.filter(a => !optimisticRemoved.includes(a.accountNo));
+  }, [accounts, filter, optimisticRemoved]);
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "list-header"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "list-header-top"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "list-title"
+  }, "My Accounts ", /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: 'var(--text3)',
+      fontSize: 13
+    }
+  }, "(", filtered.length, ")")), /*#__PURE__*/React.createElement("button", {
+    className: "refresh-btn",
+    onClick: load
+  }, "\u21BB Refresh")), /*#__PURE__*/React.createElement("div", {
+    className: "filter-chips"
+  }, FILTERS_LIST.map(f => /*#__PURE__*/React.createElement("button", {
+    key: f.label,
+    className: `chip-btn${filter === f.value ? ' active' : ''}`,
+    onClick: () => setFilter(f.value)
+  }, f.label)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      paddingTop: 10
+    }
+  }, loading ? [1, 2, 3].map(i => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      height: 100,
+      margin: '0 14px 10px',
+      borderRadius: 'var(--r)'
+    },
+    className: "skeleton"
+  })) : filtered.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    className: "coming-soon"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "coming-soon-icon"
+  }, "\uD83D\uDCED"), /*#__PURE__*/React.createElement("div", {
+    className: "coming-soon-title"
+  }, filter ? 'No accounts with this status' : 'No accounts assigned'), /*#__PURE__*/React.createElement("div", {
+    className: "coming-soon-sub"
+  }, filter ? 'Try a different filter' : 'Accounts appear here after admin uploads and allocates the base.')) : filtered.map(a => /*#__PURE__*/React.createElement(AccountCard, {
+    key: a.accountNo,
+    account: a,
+    onLog: setLogTarget
+  }))), logTarget && /*#__PURE__*/React.createElement(LogCallSheet, {
+    account: logTarget,
+    session: session,
+    onClose: () => setLogTarget(null),
+    onSuccess: (msg, freshAccounts) => {
+      showToast(msg, 'success');
+      freshAccounts ? setAccounts(freshAccounts) : load();
+    },
+    showToast: showToast
+  }));
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  EARNINGS PAGE
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const EarningsPage = ({ session, showToast }) => {
-  const [data,setData] = useState(null);
-  const [loading,setLoading] = useState(true);
-
-  useEffect(()=>{
-    Api.get({action:'get_tc_earnings',token:session.token,staffId:session.staffId})
-      .then(d=>setData(d)).catch(e=>showToast(e.message,'error'))
-      .finally(()=>setLoading(false));
-  },[]);
-
-  if(loading) return <div style={{padding:14}}>{[1,2,3].map(i=><div key={i} style={{height:80,borderRadius:'var(--r)',marginBottom:10}} className="skeleton"/>)}</div>;
-
-  const pct = data?.targetPercent||0;
-  return (
-    <div>
-      <div className="earn-card">
-        <div className="earn-label">MTD Earnings</div>
-        <div className="earn-amount">₹{(data?.mtdEarned||0).toLocaleString('en-IN')}</div>
-        <div className="earn-sub">From {data?.mtdCollected||0} collections · ₹{data?.ratePerCollection||300}/collection</div>
-      </div>
-      <div className="earn-prog-wrap">
-        <div className="earn-prog-label">
-          <span>Monthly Target Progress</span>
-          <span style={{color:'var(--accent)',fontFamily:'var(--fm)'}}>{pct}%</span>
-        </div>
-        <div className="earn-prog-bar">
-          <div className="earn-prog-fill" style={{width:Math.min(pct,100)+'%'}}/>
-        </div>
-        <div style={{fontSize:11,color:'var(--text3)',marginTop:6,fontFamily:'var(--fm)'}}>
-          {data?.mtdCollected||0} of {data?.monthlyTarget||0} collections
-        </div>
-      </div>
-      <div className="earn-stat-grid">
-        <div className="earn-stat">
-          <div className="earn-stat-val">{data?.mtdCollected||0}</div>
-          <div className="earn-stat-lbl">Collections MTD</div>
-        </div>
-        <div className="earn-stat">
-          <div className="earn-stat-val">{data?.nudgeClosures||0}</div>
-          <div className="earn-stat-lbl">More to Target</div>
-        </div>
-        <div className="earn-stat">
-          <div className="earn-stat-val" style={{fontSize:18}}>₹{(data?.nudgeAmount||0).toLocaleString('en-IN')}</div>
-          <div className="earn-stat-lbl">If Target Hit</div>
-        </div>
-        <div className="earn-stat">
-          <div className="earn-stat-val">{data?.monthlyTarget||0}</div>
-          <div className="earn-stat-lbl">Monthly Target</div>
-        </div>
-      </div>
-    </div>
-  );
+const EarningsPage = ({
+  session,
+  showToast
+}) => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    Api.get({
+      action: 'get_tc_earnings',
+      token: session.token,
+      staffId: session.staffId
+    }).then(d => setData(d)).catch(e => showToast(e.message, 'error')).finally(() => setLoading(false));
+  }, []);
+  if (loading) return /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: 14
+    }
+  }, [1, 2, 3].map(i => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      height: 80,
+      borderRadius: 'var(--r)',
+      marginBottom: 10
+    },
+    className: "skeleton"
+  })));
+  const pct = data?.targetPercent || 0;
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "earn-card"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "earn-label"
+  }, "MTD Earnings"), /*#__PURE__*/React.createElement("div", {
+    className: "earn-amount"
+  }, "\u20B9", (data?.mtdEarned || 0).toLocaleString('en-IN')), /*#__PURE__*/React.createElement("div", {
+    className: "earn-sub"
+  }, "From ", data?.mtdCollected || 0, " collections \xB7 \u20B9", data?.ratePerCollection || 300, "/collection")), /*#__PURE__*/React.createElement("div", {
+    className: "earn-prog-wrap"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "earn-prog-label"
+  }, /*#__PURE__*/React.createElement("span", null, "Monthly Target Progress"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: 'var(--accent)',
+      fontFamily: 'var(--fm)'
+    }
+  }, pct, "%")), /*#__PURE__*/React.createElement("div", {
+    className: "earn-prog-bar"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "earn-prog-fill",
+    style: {
+      width: Math.min(pct, 100) + '%'
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--text3)',
+      marginTop: 6,
+      fontFamily: 'var(--fm)'
+    }
+  }, data?.mtdCollected || 0, " of ", data?.monthlyTarget || 0, " collections")), /*#__PURE__*/React.createElement("div", {
+    className: "earn-stat-grid"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "earn-stat"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "earn-stat-val"
+  }, data?.mtdCollected || 0), /*#__PURE__*/React.createElement("div", {
+    className: "earn-stat-lbl"
+  }, "Collections MTD")), /*#__PURE__*/React.createElement("div", {
+    className: "earn-stat"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "earn-stat-val"
+  }, data?.nudgeClosures || 0), /*#__PURE__*/React.createElement("div", {
+    className: "earn-stat-lbl"
+  }, "More to Target")), /*#__PURE__*/React.createElement("div", {
+    className: "earn-stat"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "earn-stat-val",
+    style: {
+      fontSize: 18
+    }
+  }, "\u20B9", (data?.nudgeAmount || 0).toLocaleString('en-IN')), /*#__PURE__*/React.createElement("div", {
+    className: "earn-stat-lbl"
+  }, "If Target Hit")), /*#__PURE__*/React.createElement("div", {
+    className: "earn-stat"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "earn-stat-val"
+  }, data?.monthlyTarget || 0), /*#__PURE__*/React.createElement("div", {
+    className: "earn-stat-lbl"
+  }, "Monthly Target"))));
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  REPORT PAGE
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const ReportPage = ({ session, showToast }) => {
-  const [report,setReport] = useState(null);
-  const [loading,setLoading] = useState(true);
-
-  const load = useCallback(async()=>{
+const ReportPage = ({
+  session,
+  showToast
+}) => {
+  const [report, setReport] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const load = useCallback(async () => {
     setLoading(true);
     try {
-      const d = await Api.get({action:'get_tc_daily_report',token:session.token,staffId:session.staffId,city:session.city});
+      const d = await Api.get({
+        action: 'get_tc_daily_report',
+        token: session.token,
+        staffId: session.staffId,
+        city: session.city
+      });
       setReport(d);
-    } catch(e) { showToast(e.message,'error'); }
-    finally { setLoading(false); }
-  },[session]);
-
-  useEffect(()=>{load();},[load]);
-
+    } catch (e) {
+      showToast(e.message, 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [session]);
+  useEffect(() => {
+    load();
+  }, [load]);
   const download = () => {
-    if(!report?.reportRows?.length){showToast('No calls today to download','error');return;}
-    const ws = XLSX.utils.json_to_sheet(report.reportRows.map(r=>({
-      'Account No':r.accountNo,'Name':r.name,'Mobile':r.mobile,
-      'Outcome':r.outcome,'Remark':r.remark,'Appt Date':r.apptDate,'Time':r.timestamp
+    if (!report?.reportRows?.length) {
+      showToast('No calls today to download', 'error');
+      return;
+    }
+    const ws = XLSX.utils.json_to_sheet(report.reportRows.map(r => ({
+      'Account No': r.accountNo,
+      'Name': r.name,
+      'Mobile': r.mobile,
+      'Outcome': r.outcome,
+      'Remark': r.remark,
+      'Appt Date': r.apptDate,
+      'Time': r.timestamp
     })));
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb,ws,'Daily Report');
-    XLSX.writeFile(wb,`TC_Report_${session.staffId}_${report.date||'today'}.xlsx`);
-    showToast('Report downloaded','success');
+    XLSX.utils.book_append_sheet(wb, ws, 'Daily Report');
+    XLSX.writeFile(wb, `TC_Report_${session.staffId}_${report.date || 'today'}.xlsx`);
+    showToast('Report downloaded', 'success');
   };
-
-  if(loading) return <div style={{padding:14}}>{[1,2,3].map(i=><div key={i} style={{height:60,borderRadius:10,marginBottom:8}} className="skeleton"/>)}</div>;
-
-  return (
-    <div>
-      <div className="rpt-header">
-        <div className="rpt-date">{report?.date||'Today'}</div>
-        <div className="rpt-title">Daily Call Report</div>
-        <div className="rpt-stats">
-          <div className="rpt-stat"><div className="rpt-val">{report?.callsToday||0}</div><div className="rpt-lbl">Calls Today</div></div>
-          <div className="rpt-stat"><div className="rpt-val">{report?.apptFixed||0}</div><div className="rpt-lbl">Appt Fixed</div></div>
-          <div className="rpt-stat"><div className="rpt-val">{report?.totalAssigned||0}</div><div className="rpt-lbl">Total</div></div>
-        </div>
-      </div>
-      {report?.reportRows?.length>0?(
-        <div className="rpt-section">
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
-            <div style={{fontSize:12,fontWeight:700,color:'var(--text2)',letterSpacing:'.5px',textTransform:'uppercase'}}>Call Log</div>
-            <button className="dl-btn" onClick={download}>📥 Download</button>
-          </div>
-          {report.reportRows.map((r,i)=>(
-            <div key={i} className="rpt-row">
-              <div className="rpt-time">{(r.timestamp||'--').slice(11,16)}</div>
-              <div className="rpt-info">
-                <div className="rpt-aname">{r.name}</div>
-                <div className="rpt-outcome">{r.outcome}{r.remark?' · '+r.remark:''}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ):(
-        <div className="coming-soon">
-          <div className="coming-soon-icon">📊</div>
-          <div className="coming-soon-title">No calls logged today</div>
-          <div className="coming-soon-sub">Calls you log will appear here.</div>
-        </div>
-      )}
-    </div>
-  );
+  if (loading) return /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: 14
+    }
+  }, [1, 2, 3].map(i => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      height: 60,
+      borderRadius: 10,
+      marginBottom: 8
+    },
+    className: "skeleton"
+  })));
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "rpt-header"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rpt-date"
+  }, report?.date || 'Today'), /*#__PURE__*/React.createElement("div", {
+    className: "rpt-title"
+  }, "Daily Call Report"), /*#__PURE__*/React.createElement("div", {
+    className: "rpt-stats"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rpt-stat"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rpt-val"
+  }, report?.callsToday || 0), /*#__PURE__*/React.createElement("div", {
+    className: "rpt-lbl"
+  }, "Calls Today")), /*#__PURE__*/React.createElement("div", {
+    className: "rpt-stat"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rpt-val"
+  }, report?.apptFixed || 0), /*#__PURE__*/React.createElement("div", {
+    className: "rpt-lbl"
+  }, "Appt Fixed")), /*#__PURE__*/React.createElement("div", {
+    className: "rpt-stat"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rpt-val"
+  }, report?.totalAssigned || 0), /*#__PURE__*/React.createElement("div", {
+    className: "rpt-lbl"
+  }, "Total")))), report?.reportRows?.length > 0 ? /*#__PURE__*/React.createElement("div", {
+    className: "rpt-section"
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 10
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      fontWeight: 700,
+      color: 'var(--text2)',
+      letterSpacing: '.5px',
+      textTransform: 'uppercase'
+    }
+  }, "Call Log"), /*#__PURE__*/React.createElement("button", {
+    className: "dl-btn",
+    onClick: download
+  }, "\uD83D\uDCE5 Download")), report.reportRows.map((r, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    className: "rpt-row"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rpt-time"
+  }, (r.timestamp || '--').slice(11, 16)), /*#__PURE__*/React.createElement("div", {
+    className: "rpt-info"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rpt-aname"
+  }, r.name), /*#__PURE__*/React.createElement("div", {
+    className: "rpt-outcome"
+  }, r.outcome, r.remark ? ' · ' + r.remark : ''))))) : /*#__PURE__*/React.createElement("div", {
+    className: "coming-soon"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "coming-soon-icon"
+  }, "\uD83D\uDCCA"), /*#__PURE__*/React.createElement("div", {
+    className: "coming-soon-title"
+  }, "No calls logged today"), /*#__PURE__*/React.createElement("div", {
+    className: "coming-soon-sub"
+  }, "Calls you log will appear here.")));
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  📁 app/(authenticated)/layout.jsx  — AppShell
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const AppShell = ({ session, onLogout }) => {
+const AppShell = ({
+  session,
+  onLogout
+}) => {
   const [activePage, setActivePage] = useState('dash');
-  const { toast, showToast, hideToast } = useToast();
+  const {
+    toast,
+    showToast,
+    hideToast
+  } = useToast();
 
   // Re-fetch accounts for nav badge count
-  const { hotList } = usePendingAccounts(session);
-
+  const {
+    hotList
+  } = usePendingAccounts(session);
   const handleLogout = useCallback(() => {
     SessionStore.clear();
     onLogout();
   }, [onLogout]);
-
   useTokenRefresh(session, handleLogout);
-
-  return (
-    <div className="app">
-      <AppHeader session={session} onLogout={handleLogout} />
-
-      <div className="main-content">
-        <div className={`page${activePage==='dash'     ?' on':''}`}>
-          <DashboardPage session={session} showToast={showToast} />
-        </div>
-        <div className={`page${activePage==='accounts' ?' on':''}`}>
-          <AccountsPage session={session} showToast={showToast} onRefreshDash={()=>{}} />
-        </div>
-        <div className={`page${activePage==='earnings' ?' on':''}`}>
-          <EarningsPage session={session} showToast={showToast} />
-        </div>
-        <div className={`page${activePage==='report'   ?' on':''}`}>
-          <ReportPage session={session} showToast={showToast} />
-        </div>
-      </div>
-
-      <BottomNav
-        active={activePage}
-        onChange={setActivePage}
-        hotCount={hotList.length}
-      />
-
-      {toast && <Toast msg={toast.msg} type={toast.type} onDone={hideToast} />}
-    </div>
-  );
+  return /*#__PURE__*/React.createElement("div", {
+    className: "app"
+  }, /*#__PURE__*/React.createElement(AppHeader, {
+    session: session,
+    onLogout: handleLogout
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "main-content"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: `page${activePage === 'dash' ? ' on' : ''}`
+  }, /*#__PURE__*/React.createElement(DashboardPage, {
+    session: session,
+    showToast: showToast
+  })), /*#__PURE__*/React.createElement("div", {
+    className: `page${activePage === 'accounts' ? ' on' : ''}`
+  }, /*#__PURE__*/React.createElement(AccountsPage, {
+    session: session,
+    showToast: showToast,
+    onRefreshDash: () => {}
+  })), /*#__PURE__*/React.createElement("div", {
+    className: `page${activePage === 'earnings' ? ' on' : ''}`
+  }, /*#__PURE__*/React.createElement(EarningsPage, {
+    session: session,
+    showToast: showToast
+  })), /*#__PURE__*/React.createElement("div", {
+    className: `page${activePage === 'report' ? ' on' : ''}`
+  }, /*#__PURE__*/React.createElement(ReportPage, {
+    session: session,
+    showToast: showToast
+  }))), /*#__PURE__*/React.createElement(BottomNav, {
+    active: activePage,
+    onChange: setActivePage,
+    hotCount: hotList.length
+  }), toast && /*#__PURE__*/React.createElement(Toast, {
+    msg: toast.msg,
+    type: toast.type,
+    onDone: hideToast
+  }));
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  📁 components/auth/LoginCard.jsx
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const LoginCard = ({ onLogin }) => {
+const LoginCard = ({
+  onLogin
+}) => {
   const [staffId, setStaffId] = useState('');
-  const [city,    setCity]    = useState('CBE');
-  const [pin,     setPin]     = useState('');
-  const [error,   setError]   = useState('');
+  const [city, setCity] = useState('CBE');
+  const [pin, setPin] = useState('');
+  const [error, setError] = useState('');
   const [shaking, setShaking] = useState(false);
-  const { toast, showToast, hideToast } = useToast();
-
+  const {
+    toast,
+    showToast,
+    hideToast
+  } = useToast();
   const shake = useCallback(() => {
-    setShaking(true); setTimeout(() => setShaking(false), 450);
+    setShaking(true);
+    setTimeout(() => setShaking(false), 450);
   }, []);
-
-  const { login, loading } = useAuth({
+  const {
+    login,
+    loading
+  } = useAuth({
     onSuccess: onLogin,
-    onError: (msg) => { shake(); setError(msg); showToast(msg,'error'); setPin(''); }
+    onError: msg => {
+      shake();
+      setError(msg);
+      showToast(msg, 'error');
+      setPin('');
+    }
   });
-
   const handleSubmit = useCallback(() => {
-    if (!staffId.trim()) { showToast('Enter your Staff ID'); return; }
-    if (pin.length < 4)  { showToast('Enter your 4-digit PIN'); return; }
+    if (!staffId.trim()) {
+      showToast('Enter your Staff ID');
+      return;
+    }
+    if (pin.length < 4) {
+      showToast('Enter your 4-digit PIN');
+      return;
+    }
     setError('');
     login(staffId, pin, city);
   }, [staffId, pin, city, login]);
-
   useEffect(() => {
     if (pin.length === 4 && staffId.trim()) {
       const t = setTimeout(handleSubmit, 80);
       return () => clearTimeout(t);
     }
   }, [pin, staffId]);
-
-  return (
-    <div className="login-screen">
-      <div className={`login-card${shaking?' shake':''}`}>
-        <div className="login-logo-wrap">
-          <BrandLogo size="lg" />
-          <div className="login-title">Telecaller Console</div>
-          <div className="login-sub">CollectPro · VOA Recovery Operations</div>
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">City</label>
-          <select className="form-input" value={city} onChange={e => setCity(e.target.value)} disabled={loading}
-            style={{WebkitAppearance:'none',appearance:'none'}}>
-            <option value="CBE">Coimbatore (CBE)</option>
-            <option value="CHN">Chennai (CHN)</option>
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">Staff ID</label>
-          <input className="form-input" type="text" value={staffId}
-            onChange={e => setStaffId(e.target.value.toUpperCase())}
-            onKeyDown={e => e.key==='Enter' && handleSubmit()}
-            placeholder="e.g. TC_001" autoCapitalize="characters"
-            autoCorrect="off" spellCheck={false} disabled={loading} />
-        </div>
-
-        <div className="form-group" style={{marginBottom:8}}>
-          <label className="form-label">PIN</label>
-          <input className="form-input pin-field" type="password"
-            inputMode="numeric" pattern="[0-9]*" maxLength={4} value={pin}
-            onChange={e => setPin(Utils.sanitizePin(e.target.value))}
-            onKeyDown={e => e.key==='Enter' && handleSubmit()}
-            placeholder="• • • •" disabled={loading} />
-        </div>
-
-        <PinDots length={pin.length} />
-
-        <button className="btn-login" onClick={handleSubmit} disabled={loading}>
-          {loading ? <><div className="spinner"/><span>Signing in...</span></> : 'Sign In →'}
-        </button>
-
-        {error && <div className="login-error">{error}</div>}
-      </div>
-      {toast && <Toast msg={toast.msg} type={toast.type} onDone={hideToast} />}
-    </div>
-  );
+  return /*#__PURE__*/React.createElement("div", {
+    className: "login-screen"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: `login-card${shaking ? ' shake' : ''}`
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "login-logo-wrap"
+  }, /*#__PURE__*/React.createElement(BrandLogo, {
+    size: "lg"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "login-title"
+  }, "Telecaller Console"), /*#__PURE__*/React.createElement("div", {
+    className: "login-sub"
+  }, "CollectPro \xB7 VOA Recovery Operations")), /*#__PURE__*/React.createElement("div", {
+    className: "form-group"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "form-label"
+  }, "City"), /*#__PURE__*/React.createElement("select", {
+    className: "form-input",
+    value: city,
+    onChange: e => setCity(e.target.value),
+    disabled: loading,
+    style: {
+      WebkitAppearance: 'none',
+      appearance: 'none'
+    }
+  }, /*#__PURE__*/React.createElement("option", {
+    value: "CBE"
+  }, "Coimbatore (CBE)"), /*#__PURE__*/React.createElement("option", {
+    value: "CHN"
+  }, "Chennai (CHN)"))), /*#__PURE__*/React.createElement("div", {
+    className: "form-group"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "form-label"
+  }, "Staff ID"), /*#__PURE__*/React.createElement("input", {
+    className: "form-input",
+    type: "text",
+    value: staffId,
+    onChange: e => setStaffId(e.target.value.toUpperCase()),
+    onKeyDown: e => e.key === 'Enter' && handleSubmit(),
+    placeholder: "e.g. TC_001",
+    autoCapitalize: "characters",
+    autoCorrect: "off",
+    spellCheck: false,
+    disabled: loading
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "form-group",
+    style: {
+      marginBottom: 8
+    }
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "form-label"
+  }, "PIN"), /*#__PURE__*/React.createElement("input", {
+    className: "form-input pin-field",
+    type: "password",
+    inputMode: "numeric",
+    pattern: "[0-9]*",
+    maxLength: 4,
+    value: pin,
+    onChange: e => setPin(Utils.sanitizePin(e.target.value)),
+    onKeyDown: e => e.key === 'Enter' && handleSubmit(),
+    placeholder: "\u2022 \u2022 \u2022 \u2022",
+    disabled: loading
+  })), /*#__PURE__*/React.createElement(PinDots, {
+    length: pin.length
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "btn-login",
+    onClick: handleSubmit,
+    disabled: loading
+  }, loading ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "spinner"
+  }), /*#__PURE__*/React.createElement("span", null, "Signing in...")) : 'Sign In →'), error && /*#__PURE__*/React.createElement("div", {
+    className: "login-error"
+  }, error)), toast && /*#__PURE__*/React.createElement(Toast, {
+    msg: toast.msg,
+    type: toast.type,
+    onDone: hideToast
+  }));
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  📁 app/page.jsx — Root auth gate
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const App = () => {
-  const [session,  setSession]  = useState(null);
+  const [session, setSession] = useState(null);
   const [checking, setChecking] = useState(true);
-
   useEffect(() => {
     const saved = SessionStore.load();
     if (saved) setSession(saved);
     setChecking(false);
   }, []);
-
-  if (checking) return (
-    <div className="load-overlay">
-      <div className="load-spinner"/>
-      <div className="load-text">CollectPro loading...</div>
-    </div>
-  );
-
-  return session
-    ? <AppShell session={session} onLogout={() => setSession(null)} />
-    : <LoginCard onLogin={s => setSession(s)} />;
+  if (checking) return /*#__PURE__*/React.createElement("div", {
+    className: "load-overlay"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "load-spinner"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "load-text"
+  }, "CollectPro loading..."));
+  return session ? /*#__PURE__*/React.createElement(AppShell, {
+    session: session,
+    onLogout: () => setSession(null)
+  }) : /*#__PURE__*/React.createElement(LoginCard, {
+    onLogin: s => setSession(s)
+  });
 };
+ReactDOM.createRoot(document.getElementById('root')).render(/*#__PURE__*/React.createElement(App, null));
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 </script>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+//  COLLECTPRO TC APP — PERFORMANCE PATCHES
+//  1. TTL Cache — wraps Api.get with 60s in-memory cache
+//  2. Optimistic UI — removes account instantly on log tap
+//  3. Offline detection — queues failed writes, retries on reconnect
+// ─────────────────────────────────────────────────────────────
+
+// ── 1. TTL CACHE ─────────────────────────────────────────────
+(function patchApiCache() {
+  const _cache = {};
+  const CACHEABLE = ['tc_init','get_tc_accounts','get_tc_dashboard','get_tc_earnings'];
+  const TTL_MS    = 60 * 1000; // 60 seconds
+
+  const _origGet = Api.get.bind(Api);
+  Api.get = async function(params) {
+    const action = params.action || '';
+    if (!CACHEABLE.includes(action)) return _origGet(params);
+
+    const key = action + '|' + (params.staffId||'') + '|' + (params.city||'');
+    const cached = _cache[key];
+    if (cached && (Date.now() - cached.ts) < TTL_MS) {
+      return cached.data;
+    }
+    const data = await _origGet(params);
+    _cache[key] = { data, ts: Date.now() };
+    return data;
+  };
+
+  // Bust cache after any write (log_call, etc.)
+  const _origPost = Api.post.bind(Api);
+  Api.post = async function(body) {
+    const result = await _origPost(body);
+    // Clear all TC cache entries so next read is fresh
+    Object.keys(_cache).forEach(k => delete _cache[k]);
+    return result;
+  };
+
+  window._cpCacheClear = () => Object.keys(_cache).forEach(k => delete _cache[k]);
+})();
+
+// ── 2. OFFLINE DETECTION + RETRY QUEUE ───────────────────────
+(function patchOffline() {
+  const _retryQueue = [];
+  let _isOnline = navigator.onLine;
+
+  window.addEventListener('offline', () => {
+    _isOnline = false;
+    showOfflineBanner(true);
+  });
+
+  window.addEventListener('online', () => {
+    _isOnline = true;
+    showOfflineBanner(false);
+    // Retry queued writes
+    const pending = _retryQueue.splice(0);
+    pending.forEach(fn => fn());
+  });
+
+  function showOfflineBanner(show) {
+    let banner = document.getElementById('cp-offline-banner');
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'cp-offline-banner';
+      banner.style.cssText = [
+        'position:fixed','top:56px','left:0','right:0','z-index:999',
+        'background:#d97706','color:#fff','text-align:center',
+        'padding:8px','font-size:13px','font-weight:600',
+        'font-family:var(--fh,sans-serif)','letter-spacing:.3px',
+        'transition:transform .3s'
+      ].join(';');
+      banner.textContent = '📵 No internet — actions will retry when reconnected';
+      document.body.appendChild(banner);
+    }
+    banner.style.transform = show ? 'translateY(0)' : 'translateY(-100%)';
+  }
+
+  // Patch Api.post to queue when offline
+  const _origPost2 = Api.post.bind(Api);
+  Api.post = async function(body) {
+    if (!navigator.onLine) {
+      return new Promise((resolve, reject) => {
+        _retryQueue.push(async () => {
+          try { resolve(await _origPost2(body)); }
+          catch(e) { reject(e); }
+        });
+      });
+    }
+    return _origPost2(body);
+  };
+})();
+
+// ── 3. OPTIMISTIC UI — Remove account instantly on submit ─────
+// Patches AccountsPage's onSuccess handler to remove account
+// from local state BEFORE the API responds, then reconcile
+(function patchOptimisticUI() {
+  // Store reference to the accounts setter — grabbed at runtime
+  // by intercepting React's setState through a custom event
+  window._cpOptimisticRemove = function(accountNo) {
+    // Dispatch custom event that AccountsPage listens to
+    window.dispatchEvent(new CustomEvent('cp:optimistic_remove', {
+      detail: { accountNo }
+    }));
+  };
+
+  window._cpOptimisticRestore = function(accountNo) {
+    window.dispatchEvent(new CustomEvent('cp:optimistic_restore', {
+      detail: { accountNo }
+    }));
+  };
+})();
+</script>
+
 </body>
 </html>
