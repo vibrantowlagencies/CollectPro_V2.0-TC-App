@@ -95,7 +95,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);-webkit-font-s
 .login-error{background:var(--red-lt);border:1px solid rgba(220,38,38,.2);border-radius:10px;padding:11px 14px;font-size:13px;color:var(--red);margin-top:12px;animation:fadeIn .2s ease;text-align:center}
 
 /* ── APP SHELL ──────────────────────────────────────── */
-.app{display:flex;flex-direction:column;height:100vh;height:100dvh;max-height:-webkit-fill-available}
+.app{display:flex;flex-direction:column;height:100vh}
 .header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-sm);flex-shrink:0}
 .brand{display:flex;align-items:center;gap:10px}
 .brand-logo{width:34px;height:34px;background:linear-gradient(135deg,var(--accent),var(--accent-dk));border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:800;font-size:11px;color:#fff;letter-spacing:.5px}
@@ -108,7 +108,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);-webkit-font-s
 .logout-btn:hover{border-color:var(--red);color:var(--red)}
 
 /* ── BOTTOM NAV ─────────────────────────────────────── */
-.bnav{display:flex;background:var(--bg2);border-top:1px solid var(--border);height:60px;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom);position:sticky;bottom:0;z-index:99;width:100%}
+.bnav{display:flex;background:var(--bg2);border-top:1px solid var(--border);height:60px;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom)}
 .ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;cursor:pointer;color:var(--text3);font-size:10px;font-family:var(--fb);font-weight:600;transition:color .2s;padding:0;position:relative}
 .ni .ico{font-size:20px}
 .ni.on{color:var(--accent)}
@@ -116,8 +116,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);-webkit-font-s
 
 /* ── PAGES ──────────────────────────────────────────── */
 .main-content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative}
-.page{display:none;padding-bottom:80px}
-.page.on{display:block;animation:fadeIn .2s ease}
+.page{display:none}.page.on{display:block;animation:fadeIn .2s ease;padding-bottom:72px}
 
 /* ── DASHBOARD ──────────────────────────────────────── */
 .dash-wrap{padding:16px}
@@ -2171,5 +2170,41 @@ ReactDOM.createRoot(document.getElementById('root')).render(/*#__PURE__*/React.c
 })();
 </script>
 
+
+<script>
+// Android back button — go to previous tab instead of exiting
+(function(){
+  var history_stack = [];
+  var active_page = null;
+  
+  // Override pushState to track tab changes
+  window.__navTo = function(pageId) {
+    if (active_page && active_page !== pageId) {
+      history.pushState({ page: active_page }, '', '');
+      history_stack.push(active_page);
+    }
+    active_page = pageId;
+  };
+  
+  // Handle back button
+  window.addEventListener('popstate', function(e) {
+    if (history_stack.length > 0) {
+      var prev = history_stack.pop();
+      // Find and click the nav button for prev page
+      var btns = document.querySelectorAll('.ni');
+      btns.forEach(function(btn) {
+        if (btn.dataset && btn.dataset.page === prev) btn.click();
+      });
+    } else {
+      // No history — confirm exit
+      if (confirm('Exit CollectPro?')) window.history.back();
+      else history.pushState(null, '', '');
+    }
+  });
+  
+  // Push initial state
+  history.pushState(null, '', '');
+})();
+</script>
 </body>
 </html>
