@@ -1,4 +1,4 @@
-<!-- CollectPro / VORS — TC_App_v3.2.0.html | Vibrant Owl Agencies | v3.2.0 Production Release -->
+<!-- TC App v3.1.0 — Babel precompiled, no runtime JSX -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -95,7 +95,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);-webkit-font-s
 .login-error{background:var(--red-lt);border:1px solid rgba(220,38,38,.2);border-radius:10px;padding:11px 14px;font-size:13px;color:var(--red);margin-top:12px;animation:fadeIn .2s ease;text-align:center}
 
 /* ── APP SHELL ──────────────────────────────────────── */
-.app{display:flex;flex-direction:column;height:100vh}
+.app{display:flex;flex-direction:column;height:100vh;height:100dvh;max-height:-webkit-fill-available}
 .header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-sm);flex-shrink:0}
 .brand{display:flex;align-items:center;gap:10px}
 .brand-logo{width:34px;height:34px;background:linear-gradient(135deg,var(--accent),var(--accent-dk));border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:800;font-size:11px;color:#fff;letter-spacing:.5px}
@@ -108,7 +108,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);-webkit-font-s
 .logout-btn:hover{border-color:var(--red);color:var(--red)}
 
 /* ── BOTTOM NAV ─────────────────────────────────────── */
-.bnav{display:flex;background:var(--bg2);border-top:1px solid var(--border);height:60px;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom)}
+.bnav{display:flex;background:var(--bg2);border-top:1px solid var(--border);height:60px;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom);position:sticky;bottom:0;z-index:99;width:100%}
 .ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;cursor:pointer;color:var(--text3);font-size:10px;font-family:var(--fb);font-weight:600;transition:color .2s;padding:0;position:relative}
 .ni .ico{font-size:20px}
 .ni.on{color:var(--accent)}
@@ -429,7 +429,7 @@ const CONFIG = {
   SESSION_KEY: 'voa_session_tc',
   REFRESH_MS: 25 * 60 * 1000,
   ALLOWED_ROLE: 'TELECALLER',
-  APP_VERSION: 'v3.2.0',
+  APP_VERSION: 'v3.0.0',
   CITY_DEFAULT: 'CBE',
   // Aging thresholds
   AGING_HOURS: 48,
@@ -1024,14 +1024,14 @@ const SharedResponsibility = ({
     return `🔔 *CollectPro — Pending Alert*\n\n` + `Hi ${execName || 'Exec'}, please follow up on this account:\n\n` + `📋 *Account:* ${accNo}\n` + `👤 *Customer:* ${name}\n` + `📞 *Mobile:* ${mobile}\n` + `📍 *Area:* ${area}\n` + (appt ? `📅 *Appointment:* ${appt}\n` : '') + (remark ? `💬 *Remark:* ${remark}\n` : '') + `⏱ *Pending since:* ${Utils.formatHours(ageH)}\n\n` + `Please confirm visit or call me. — ${tcName} (TC)`;
   };
   const handleShareWA = () => {
-    // Need exec's mobile — use execId as fallback label if no mobile
-    // In Phase 5, exec mobile will be fetched from staff list
-    const msg = buildShareMessage();
-    // For now open WA without pre-filled number (exec mobile not in account data)
-    // Phase 5: fetch exec mobile from getStaffList and pre-fill number
-    const link = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    const msg    = buildShareMessage();
+    const mobile = account.execMobile || '';
+    // If exec mobile is stored in User_Master, pre-fill number
+    const link   = mobile
+      ? `https://wa.me/${mobile.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`
+      : `https://wa.me/?text=${encodeURIComponent(msg)}`;
     window.open(link, '_blank');
-    showToast('Opening WhatsApp to share with exec', 'success');
+    showToast('Opening WhatsApp to share with ' + (execName || execId), 'success');
   };
   if (!execId) {
     return /*#__PURE__*/React.createElement("div", {
@@ -1056,13 +1056,17 @@ const SharedResponsibility = ({
     className: "exec-action-btns"
   }, /*#__PURE__*/React.createElement("button", {
     className: "exec-btn call",
-    onClick: () => showToast('Exec mobile available in Phase 5', 'warning'),
+    onClick: () => {
+        const mobile = account.execMobile || '';
+        if (mobile) { window.location.href = 'tel:' + mobile.replace(/\D/g,''); }
+        else { showToast('Exec mobile not on file — contact Admin to add', 'warning'); }
+      },
     title: "Call Executive"
   }, "\uD83D\uDCDE Call"), /*#__PURE__*/React.createElement("button", {
     className: "exec-btn wa",
     onClick: handleShareWA,
     title: "WhatsApp Executive"
-  }, "\uD83D\uDCAC WA")))), /*#__PURE__*/React.createElement("button", {
+  }, "\uD83D\uDCAC WA Exec")))), /*#__PURE__*/React.createElement("button", {
     className: "share-btn",
     onClick: handleShareWA
   }, /*#__PURE__*/React.createElement("span", null, "\uD83D\uDD17"), "Share responsibility with ", execName || execId));
@@ -1088,11 +1092,17 @@ const PendingCard = ({
   const score = account.priorityScore || account.priority_score || 0;
   const ageH = account._ageHours || 0;
   const urgency = account._urgency || 'aging';
+  const escalFlag   = account.escalationFlag || account.escalation_flag || 'NONE';
   const urgencyLabel = {
     overdue: '🔴 OVERDUE APPT',
     appt: '🟢 APPT TODAY',
     aging: `⏱ ${Utils.formatHours(ageH)} IDLE`
   }[urgency];
+  const escalBadge = escalFlag === 'TC_CHEAT'
+    ? '🚨 ADMIN FLAGGED — contact Arun immediately'
+    : escalFlag === 'EXEC_LOOP'
+    ? '⚠️ Exec rescheduled 3×+ — push harder to get appt fixed'
+    : null;
   const handleCall = () => {
     window.location.href = Utils.buildCallLink(mobile);
   };
